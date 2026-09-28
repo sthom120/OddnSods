@@ -18,6 +18,8 @@ function ListsPage() {
   const [showNewListForm, setShowNewListForm] = useState(false);
   const [notificationMessage, setNotificationMessage] =
     useState("");
+  const [openMenuListId, setOpenMenuListId] = useState(null);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
 
   const navigate = useNavigate();
 
@@ -25,19 +27,18 @@ function ListsPage() {
     localStorage.getItem("user")
   );
 
+  const userInitial =
+    currentUser?.name?.charAt(0).toUpperCase() || "U";
+
   const turnOnNotifications = async () => {
     setNotificationMessage("");
 
     const result = await enableNotifications();
 
     if (result.success) {
-      setNotificationMessage(
-        "Notifications are on."
-      );
+      setNotificationMessage("Notifications are on.");
     } else {
-      setNotificationMessage(
-        result.message
-      );
+      setNotificationMessage(result.message);
     }
   };
 
@@ -54,10 +55,7 @@ function ListsPage() {
       const data = await apiFetch("/lists");
       setLists(data);
     } catch (error) {
-      console.error(
-        "Failed to fetch lists:",
-        error
-      );
+      console.error("Failed to fetch lists:", error);
 
       setListsError(
         "We couldn't load your lists. Please try again."
@@ -65,6 +63,12 @@ function ListsPage() {
     } finally {
       setLoadingLists(false);
     }
+  };
+
+  const openCreateList = () => {
+    setActionError("");
+    setShowNewListForm(true);
+    setOpenMenuListId(null);
   };
 
   const createList = async (e) => {
@@ -92,6 +96,7 @@ function ListsPage() {
 
   const startEditing = (list) => {
     setActionError("");
+    setOpenMenuListId(null);
     setEditingListId(list._id);
     setEditingName(list.name);
   };
@@ -102,21 +107,16 @@ function ListsPage() {
     setActionError("");
 
     try {
-      const updatedList = await apiFetch(
-        `/lists/${listId}`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({
-            name: editingName,
-          }),
-        }
-      );
+      const updatedList = await apiFetch(`/lists/${listId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: editingName,
+        }),
+      });
 
       setLists((current) =>
         current.map((list) =>
-          list._id === updatedList._id
-            ? updatedList
-            : list
+          list._id === updatedList._id ? updatedList : list
         )
       );
 
@@ -128,6 +128,8 @@ function ListsPage() {
   };
 
   const deleteList = async (listId) => {
+    setOpenMenuListId(null);
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this list?"
     );
@@ -150,8 +152,7 @@ function ListsPage() {
   };
 
   const logout = async () => {
-    const result =
-      await unregisterNotifications();
+    const result = await unregisterNotifications();
 
     if (!result.success) {
       console.warn(
@@ -178,146 +179,155 @@ function ListsPage() {
   };
 
   return (
-    <div className="dashboard-layout">
-      <aside className="sidebar">
+    <div className="dashboard-layout concept-one-dashboard">
+      <aside className="sidebar concept-one-sidebar">
         <div className="brand">
           <div className="brand-mark">✓</div>
           <span>OddsnSods</span>
         </div>
 
-        <nav className="sidebar-nav">
-          <Link
-            to="/"
-            className="nav-item active"
-          >
-            <span>☰</span>
+        <nav className="sidebar-nav" aria-label="Main navigation">
+          <Link to="/" className="nav-item active">
+            <span className="nav-icon">☷</span>
             My Lists
           </Link>
 
-          <Link
-            to="/today"
-            className="nav-item"
-          >
-            <span>○</span>
+          <Link to="/today" className="nav-item">
+            <span className="nav-icon">○</span>
             Today
           </Link>
 
-          <Link
-            to="/upcoming"
-            className="nav-item"
-          >
-            <span>◷</span>
+          <Link to="/upcoming" className="nav-item">
+            <span className="nav-icon">◷</span>
             Upcoming
           </Link>
 
-          <button className="nav-item disabled">
-            <span>✓</span>
+          <button className="nav-item disabled" type="button">
+            <span className="nav-icon">✓</span>
             Completed
           </button>
         </nav>
 
         <div className="sidebar-bottom">
           <div className="user-card">
-            <div className="user-avatar">
-              {currentUser?.name
-                ?.charAt(0)
-                .toUpperCase() || "U"}
-            </div>
+            <div className="user-avatar">{userInitial}</div>
 
             <div className="user-details">
-              <strong>
-                {currentUser?.name || "User"}
-              </strong>
-
-              <span>
-                {currentUser?.email}
-              </span>
+              <strong>{currentUser?.name || "User"}</strong>
+              <span>{currentUser?.email}</span>
             </div>
           </div>
 
           <button
-            className="logout-button"
-            onClick={logout}
+            type="button"
+            className="sidebar-secondary-action"
+            onClick={turnOnNotifications}
           >
-            Log out
+            <span>♢</span>
+            Notifications
           </button>
 
           <button
+            className="sidebar-secondary-action"
             type="button"
-            className="logout-button"
-            onClick={turnOnNotifications}
+            onClick={logout}
           >
-            Enable notifications
+            <span>↗</span>
+            Log out
           </button>
 
           {notificationMessage && (
-            <small>
+            <small className="notification-setting-message">
               {notificationMessage}
             </small>
           )}
         </div>
+
+        <button
+          type="button"
+          className="mobile-profile-trigger"
+          aria-label="Open profile and settings"
+          aria-expanded={showAccountMenu}
+          onClick={() =>
+            setShowAccountMenu((current) => !current)
+          }
+        >
+          {userInitial}
+        </button>
       </aside>
 
-      <main className="dashboard-main">
-        <header className="dashboard-header">
+      {showAccountMenu && (
+        <section className="mobile-account-panel">
+          <div className="mobile-account-heading">
+            <div className="user-avatar">{userInitial}</div>
+            <div className="user-details">
+              <strong>{currentUser?.name || "User"}</strong>
+              <span>{currentUser?.email}</span>
+            </div>
+          </div>
+
+          <button type="button" onClick={turnOnNotifications}>
+            <span>♢</span>
+            Enable notifications
+          </button>
+
+          <button type="button" onClick={logout}>
+            <span>↗</span>
+            Log out
+          </button>
+
+          {notificationMessage && (
+            <small>{notificationMessage}</small>
+          )}
+        </section>
+      )}
+
+      <main className="dashboard-main concept-one-main">
+        <header className="dashboard-header concept-one-header">
           <div>
-            <p className="eyebrow">
-              YOUR SPACE
-            </p>
-
+            <p className="eyebrow">YOUR SPACE</p>
             <h1>My Lists</h1>
-
             <p className="dashboard-subtitle">
-              Keep everything somewhere other than
-              your head.
+              Keep everything somewhere other than your head.
             </p>
           </div>
 
           <button
-            className="primary-button"
-            onClick={() => {
-              setActionError("");
-              setShowNewListForm(true);
-            }}
+            className="primary-button new-list-button"
+            type="button"
+            onClick={openCreateList}
           >
-            + New list
+            <span className="button-plus">+</span>
+            New list
           </button>
         </header>
 
         {actionError && (
-          <div className="auth-error">
+          <div className="auth-error dashboard-error">
             {actionError}
           </div>
         )}
 
         {showNewListForm && (
-          <section className="new-list-panel">
+          <section className="new-list-panel concept-one-new-list-panel">
             <div>
-              <h2>Create a new list</h2>
-
+              <p className="panel-kicker">NEW LIST</p>
+              <h2>What do you want to get out of your head?</h2>
               <p>
-                Give it a name. You can decide how
-                it works afterwards.
+                Just give it a name for now. You can change the details later.
               </p>
             </div>
 
-            <form
-              className="new-list-form"
-              onSubmit={createList}
-            >
+            <form className="new-list-form" onSubmit={createList}>
               <input
                 autoFocus
                 value={newListName}
-                onChange={(e) =>
-                  setNewListName(e.target.value)
-                }
+                onChange={(e) => setNewListName(e.target.value)}
                 placeholder="e.g. Home, Uni, Holiday planning..."
+                aria-label="New list name"
               />
 
-              <button
-                className="primary-button"
-                type="submit"
-              >
+              <button className="primary-button" type="submit">
                 Create
               </button>
 
@@ -337,15 +347,14 @@ function ListsPage() {
         )}
 
         {loadingLists ? (
-          <section className="empty-state">
+          <section className="empty-state compact-empty-state">
+            <div className="loading-dot" />
             <h2>Loading your lists...</h2>
           </section>
         ) : listsError ? (
           <section className="empty-state">
             <h2>Couldn't load your lists</h2>
-
             <p>{listsError}</p>
-
             <button
               className="primary-button"
               type="button"
@@ -357,59 +366,57 @@ function ListsPage() {
         ) : lists.length === 0 ? (
           <section className="empty-state">
             <div className="empty-icon">✓</div>
-
             <h2>Nothing to hold onto yet</h2>
-
-            <p>
-              Create a list and get it out of your
-              head.
-            </p>
-
+            <p>Create a list and get it out of your head.</p>
             <button
               className="primary-button"
-              onClick={() =>
-                setShowNewListForm(true)
-              }
+              type="button"
+              onClick={openCreateList}
             >
               Create your first list
             </button>
           </section>
         ) : (
-          <section className="lists-grid">
+          <section className="lists-grid concept-one-lists-grid">
             {lists.map((list, index) => {
               const userOwnsList =
                 list.owner?._id === currentUser?.id ||
                 list.owner === currentUser?.id;
 
+              const isShared = list.members?.length > 0;
+
               return (
                 <article
-                  className={`dashboard-list-card ${getListColourClass(
+                  className={`dashboard-list-card concept-one-list-card ${getListColourClass(
                     index
                   )}`}
                   key={list._id}
                 >
-                  {editingListId === list._id &&
-                  userOwnsList ? (
+                  {editingListId === list._id && userOwnsList ? (
                     <div className="list-edit-panel">
-                      <input
-                        value={editingName}
-                        onChange={(e) =>
-                          setEditingName(e.target.value)
-                        }
-                      />
+                      <label>
+                        <span>List name</span>
+                        <input
+                          autoFocus
+                          value={editingName}
+                          onChange={(e) =>
+                            setEditingName(e.target.value)
+                          }
+                        />
+                      </label>
 
                       <div className="card-actions">
                         <button
                           className="small-button primary-small"
-                          onClick={() =>
-                            saveListName(list._id)
-                          }
+                          type="button"
+                          onClick={() => saveListName(list._id)}
                         >
                           Save
                         </button>
 
                         <button
                           className="small-button"
+                          type="button"
                           onClick={() => {
                             setEditingListId(null);
                             setEditingName("");
@@ -422,98 +429,143 @@ function ListsPage() {
                     </div>
                   ) : (
                     <>
-                      <Link
-                        to={`/list/${list._id}`}
-                        className="dashboard-card-link"
-                      >
-                        <div className="list-card-icon">
-                          {list.name
-                            .charAt(0)
-                            .toUpperCase()}
-                        </div>
+                      <div className="list-card-row">
+                        <Link
+                          to={`/list/${list._id}`}
+                          className="dashboard-card-link concept-one-card-link"
+                        >
+                          <div className="list-card-icon">
+                            {list.name.charAt(0).toUpperCase()}
+                          </div>
 
-                        <div>
-                          <h2>{list.name}</h2>
+                          <div className="list-card-copy">
+                            <h2>{list.name}</h2>
+                            <div className="list-card-status-row">
+                              <span
+                                className={`list-privacy-badge ${
+                                  isShared ? "shared" : "private"
+                                }`}
+                              >
+                                {isShared ? "Shared" : "Private"}
+                              </span>
 
-                          <p>
-                            {list.members?.length > 0
-                              ? `Shared with ${list.members.length} ${
-                                  list.members.length === 1
-                                    ? "person"
-                                    : "people"
-                                }`
-                              : "Private list"}
-                          </p>
-                        </div>
-                      </Link>
+                              <span className="list-card-description">
+                                {isShared
+                                  ? `with ${list.members.length} ${
+                                      list.members.length === 1
+                                        ? "person"
+                                        : "people"
+                                    }`
+                                  : "Just for you"}
+                              </span>
+                            </div>
+                          </div>
 
-                      <div className="dashboard-card-footer">
-                        <div className="member-avatars">
-                          {list.members
-                            ?.slice(0, 3)
-                            .map((member) => (
+                          <span className="list-card-chevron" aria-hidden="true">
+                            ›
+                          </span>
+                        </Link>
+
+                        {userOwnsList && (
+                          <div className="list-card-menu-wrap">
+                            <button
+                              type="button"
+                              className="list-card-menu-button"
+                              aria-label={`More options for ${list.name}`}
+                              aria-expanded={openMenuListId === list._id}
+                              onClick={() =>
+                                setOpenMenuListId((current) =>
+                                  current === list._id ? null : list._id
+                                )
+                              }
+                            >
+                              ⋯
+                            </button>
+
+                            {openMenuListId === list._id && (
+                              <div className="list-card-menu">
+                                <button
+                                  type="button"
+                                  onClick={() => startEditing(list)}
+                                >
+                                  Rename
+                                </button>
+                                <button
+                                  type="button"
+                                  className="menu-danger"
+                                  onClick={() => deleteList(list._id)}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {isShared && (
+                        <div className="dashboard-card-footer concept-one-card-footer">
+                          <div className="member-avatars" aria-label="List members">
+                            {list.members.slice(0, 3).map((member) => (
                               <div
                                 className="mini-avatar"
                                 key={member._id}
                                 title={member.name}
                               >
-                                {member.name
-                                  ?.charAt(0)
-                                  .toUpperCase()}
+                                {member.name?.charAt(0).toUpperCase()}
                               </div>
                             ))}
-                        </div>
 
-                        {userOwnsList && (
-                          <div className="card-actions">
-                            <button
-                              className="icon-button"
-                              title="Rename list"
-                              onClick={() =>
-                                startEditing(list)
-                              }
-                            >
-                              ✎
-                            </button>
-
-                            <button
-                              className="icon-button danger-icon"
-                              title="Delete list"
-                              onClick={() =>
-                                deleteList(list._id)
-                              }
-                            >
-                              ×
-                            </button>
+                            {list.members.length > 3 && (
+                              <div className="mini-avatar mini-avatar-more">
+                                +{list.members.length - 3}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+
+                          <span className="shared-note">
+                            Shared space
+                          </span>
+                        </div>
+                      )}
                     </>
                   )}
                 </article>
               );
             })}
-
-            <button
-              className="create-list-card"
-              onClick={() => {
-                setActionError("");
-                setShowNewListForm(true);
-              }}
-            >
-              <span className="create-list-plus">
-                +
-              </span>
-
-              <strong>Create a new list</strong>
-
-              <span>
-                Clear one more thing from your mind.
-              </span>
-            </button>
           </section>
         )}
       </main>
+
+      <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
+        <Link to="/" className="mobile-bottom-nav-item active">
+          <span className="mobile-nav-icon">☷</span>
+          <span>Lists</span>
+        </Link>
+
+        <Link to="/today" className="mobile-bottom-nav-item">
+          <span className="mobile-nav-icon">○</span>
+          <span>Today</span>
+        </Link>
+
+        <Link to="/upcoming" className="mobile-bottom-nav-item">
+          <span className="mobile-nav-icon">◷</span>
+          <span>Upcoming</span>
+        </Link>
+
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item ${
+            showAccountMenu ? "active" : ""
+          }`}
+          onClick={() =>
+            setShowAccountMenu((current) => !current)
+          }
+        >
+          <span className="mobile-nav-avatar">{userInitial}</span>
+          <span>Profile</span>
+        </button>
+      </nav>
     </div>
   );
 }
