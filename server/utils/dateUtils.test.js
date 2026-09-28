@@ -6,6 +6,7 @@ const {
   dateKeyToDate,
   getDateKeyFromValue,
   getTodayDateKey,
+  getZonedDateParts,
 } = require("./dateUtils");
 
 test("keeps a date-only input as the same calendar date", () => {
@@ -26,6 +27,24 @@ test("uses the configured local day instead of UTC day", () => {
       "Australia/Brisbane"
     ),
     "2026-09-29"
+  );
+});
+
+test("returns local hour and date for reminder scheduling", () => {
+  const instant = new Date(
+    "2026-09-28T23:15:00.000Z"
+  );
+
+  assert.deepEqual(
+    getZonedDateParts(
+      instant,
+      "Australia/Brisbane"
+    ),
+    {
+      dateKey: "2026-09-29",
+      hour: 9,
+      minute: 15,
+    }
   );
 });
 
