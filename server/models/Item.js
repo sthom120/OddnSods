@@ -100,6 +100,29 @@ const itemSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        const userFields = [
+          "assignedTo",
+          "completedBy",
+          "createdBy",
+        ];
+
+        for (const field of userFields) {
+          if (
+            ret[field] &&
+            typeof ret[field] === "object"
+          ) {
+            delete ret[field].email;
+            delete ret[field].password;
+            delete ret[field]
+              .notificationInstallations;
+          }
+        }
+
+        return ret;
+      },
+    },
   }
 );
 
