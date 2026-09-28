@@ -24,7 +24,7 @@ export const apiFetch = async (path, options = {}) => {
     headers,
   });
 
-  let data = null;
+  let data;
 
   try {
     data = await response.json();
