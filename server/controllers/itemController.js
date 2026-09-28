@@ -325,7 +325,7 @@ const createItem = async (
       assignedTo.toString() !==
         req.user._id.toString()
     ) {
-      void sendAssignmentNotification({
+      await sendAssignmentNotification({
         assignedUserId:
           assignedTo,
 
@@ -601,7 +601,7 @@ const updateItem = async (
         assignmentChanged &&
         assignedToAnotherUser
       ) {
-        void sendAssignmentNotification({
+        await sendAssignmentNotification({
           assignedUserId:
             newAssignedTo,
 

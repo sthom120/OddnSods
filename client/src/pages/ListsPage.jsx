@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { apiFetch } from "../api";
 import {
   enableNotifications,
+  syncNotificationsIfAllowed,
 } from "../notifications";
 
 function ListsPage() {
@@ -39,8 +40,10 @@ function ListsPage() {
   );
 
   useEffect(() => {
-    fetchLists();
-  }, []);
+  fetchLists();
+
+  syncNotificationsIfAllowed();
+}, []);
 
   const fetchLists = async () => {
     try {
