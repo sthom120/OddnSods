@@ -84,6 +84,7 @@ const claimReminderForRecipient =
         ],
         {
           new: true,
+          updatePipeline: true,
         }
       );
 
