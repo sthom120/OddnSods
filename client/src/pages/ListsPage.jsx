@@ -6,7 +6,7 @@ import {
   syncNotificationsIfAllowed,
   unregisterNotifications,
 } from "../notifications";
-import "../MyListsPolish.css";
+import "../ListsPageResponsive.css";
 
 function NavIcon({ type }) {
   if (type === "lists") {

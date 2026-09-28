@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiFetch } from "../api";
-import "../AuthConcept.css";
+import "../Auth.css";
 
 function LoginPage() {
   const navigate = useNavigate();
