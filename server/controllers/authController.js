@@ -10,18 +10,49 @@ const generateToken = (userId) => {
   );
 };
 
+const normaliseEmail = (email) =>
+  email.trim().toLowerCase();
+
+const isValidEmail = (email) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
+    if (
+      typeof name !== "string" ||
+      typeof email !== "string" ||
+      typeof password !== "string"
+    ) {
       return res.status(400).json({
         message: "Name, email and password are required",
       });
     }
 
+    const cleanName = name.trim();
+    const cleanEmail = normaliseEmail(email);
+
+    if (!cleanName || !cleanEmail || !password) {
+      return res.status(400).json({
+        message: "Name, email and password are required",
+      });
+    }
+
+    if (!isValidEmail(cleanEmail)) {
+      return res.status(400).json({
+        message: "Enter a valid email address",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters",
+      });
+    }
+
     const existingUser = await User.findOne({
-      email: email.toLowerCase(),
+      email: cleanEmail,
     });
 
     if (existingUser) {
@@ -33,8 +64,8 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name,
-      email,
+      name: cleanName,
+      email: cleanEmail,
       password: hashedPassword,
     });
 
@@ -57,8 +88,21 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      !email.trim() ||
+      !password
+    ) {
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
+    }
+
+    const cleanEmail = normaliseEmail(email);
+
     const user = await User.findOne({
-      email: email.toLowerCase(),
+      email: cleanEmail,
     });
 
     if (!user) {
