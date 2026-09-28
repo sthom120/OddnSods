@@ -30,6 +30,23 @@ const syncListHeaderIcon = () => {
   }
 };
 
+const syncListCardIcons = () => {
+  const cards = document.querySelectorAll(".polished-list-card");
+
+  cards.forEach((card) => {
+    const icon = card.querySelector(".list-card-icon");
+    const title = card.querySelector(".list-card-copy h2");
+
+    if (!icon || !title) return;
+
+    const nextIcon = getFirstGrapheme(title.textContent);
+
+    if (icon.textContent !== nextIcon) {
+      icon.textContent = nextIcon;
+    }
+  });
+};
+
 export const initialiseListPagePolish = () => {
   const root = document.getElementById("root");
   if (!root || typeof MutationObserver === "undefined") return;
@@ -42,6 +59,7 @@ export const initialiseListPagePolish = () => {
     frameId = window.requestAnimationFrame(() => {
       frameId = null;
       syncListHeaderIcon();
+      syncListCardIcons();
     });
   };
 
