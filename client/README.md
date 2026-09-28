@@ -1,16 +1,26 @@
-# React + Vite
+# OddsnSods client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+OddsnSods is a lightweight shared-list app for personal lists, shared responsibility, assignments, due dates, recurrence and browser notifications.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Copy `.env.example` to `.env`.
+2. Fill in the Firebase web configuration and VAPID key.
+3. Keep `VITE_API_URL=http://localhost:3000/api` while running the backend locally.
+4. Install dependencies with `npm install`.
+5. Start Vite with `npm run dev`.
 
-## React Compiler
+## Useful commands
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run preview
+```
 
-## Expanding the ESLint configuration
+## Deployment
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The client is intended to be deployed as a Vite SPA. `vercel.json` provides a fallback so direct visits to routes such as `/today` and `/list/:id` are served by the React app.
+
+Set `VITE_API_URL` to the deployed backend API URL and configure the Firebase `VITE_FIREBASE_*` variables in the hosting environment.
