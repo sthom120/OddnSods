@@ -5,7 +5,7 @@ import {
   enableNotifications,
   unregisterNotifications,
 } from "../notifications";
-import "../ListPageConcept.css";
+import "../ListPage.css";
 
 function NavIcon({ type }) {
   if (type === "lists") {

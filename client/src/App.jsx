@@ -19,7 +19,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./App.css";
-import "./MyListsConcept.css";
+import "./ListsPage.css";
 
 function App() {
   const navigate = useNavigate();
