@@ -186,11 +186,16 @@ function DueItemsPage({ mode }) {
     (item) => getDateOnly(item.dueDate) > laterCutoff
   );
 
-  const renderOverviewItem = (item, variant = "upcoming") => (
-    <article className={`${variant}-overview-row`} key={item._id}>
+  const renderOverviewItem = (item, tone = "upcoming") => (
+    <article
+      className={`upcoming-overview-row ${
+        tone === "overdue" ? "is-overdue" : tone === "today" ? "is-today" : ""
+      }`}
+      key={item._id}
+    >
       <button
         type="button"
-        className={`${variant}-overview-checkbox`}
+        className="upcoming-overview-checkbox"
         onClick={() => completeItem(item)}
         aria-label={`Mark ${item.title} complete`}
         title="Mark complete"
@@ -198,18 +203,18 @@ function DueItemsPage({ mode }) {
         <span aria-hidden="true" />
       </button>
 
-      <div className={`${variant}-overview-content`}>
+      <div className="upcoming-overview-content">
         {item.listId ? (
-          <Link to={`/list/${item.listId._id}`} className={`${variant}-task-title`}>
+          <Link to={`/list/${item.listId._id}`} className="upcoming-task-title">
             {item.title}
           </Link>
         ) : (
-          <span className={`${variant}-task-title`}>{item.title}</span>
+          <span className="upcoming-task-title">{item.title}</span>
         )}
 
-        <div className={`${variant}-overview-meta`}>
+        <div className="upcoming-overview-meta">
           {item.listId && (
-            <span className={`${variant}-list-meta`}>
+            <span className="upcoming-list-meta">
               <span aria-hidden="true">
                 {item.listId.name?.charAt(0).toUpperCase()}
               </span>
@@ -218,7 +223,7 @@ function DueItemsPage({ mode }) {
           )}
 
           {item.assignedTo && (
-            <span className={`${variant}-assignee-meta`}>
+            <span className="upcoming-assignee-meta">
               <span aria-hidden="true">
                 {item.assignedTo.name?.charAt(0).toUpperCase()}
               </span>
@@ -227,289 +232,228 @@ function DueItemsPage({ mode }) {
           )}
 
           {item.recurrence?.frequency && (
-            <span className={`${variant}-repeat-meta`}>
+            <span className="upcoming-repeat-meta">
               ↻ {formatRecurrence(item.recurrence.frequency)}
             </span>
           )}
         </div>
       </div>
 
-      <span className={`${variant}-date-badge`}>
+      <span className="upcoming-date-badge">
         {formatFriendlyDate(item.dueDate)}
       </span>
     </article>
   );
 
-  const renderUpcomingGroup = (title, groupItems, rangeLabel = "") => {
+  const renderGroup = (title, groupItems, tone = "upcoming") => {
     if (groupItems.length === 0) return null;
 
     return (
-      <section className="upcoming-group">
+      <section
+        className={`upcoming-group ${tone === "overdue" ? "today-overdue-group" : ""}`}
+      >
         <div className="upcoming-group-heading">
           <div>
             <h2>{title}</h2>
             <span className="upcoming-count">{groupItems.length}</span>
           </div>
-          {rangeLabel && <span>{rangeLabel}</span>}
         </div>
         <div className="upcoming-notebook-list">
-          {groupItems.map((item) => renderOverviewItem(item))}
+          {groupItems.map((item) => renderOverviewItem(item, tone))}
         </div>
       </section>
     );
   };
 
-  if (mode === "upcoming") {
-    return (
-      <div className="dashboard-layout concept-one-dashboard upcoming-dashboard">
-        <aside className="sidebar concept-one-sidebar upcoming-sidebar">
-          <Link to="/" className="upcoming-brand" aria-label="OddsnSods home">
-            <img src="/oddsnsods-logo.png" alt="OddsnSods" />
-          </Link>
-
-          <nav className="sidebar-nav" aria-label="Main navigation">
-            <Link to="/" className="nav-item">
-              <span className="nav-icon upcoming-nav-icon">
-                <NavIcon type="lists" />
-              </span>
-              My Lists
-            </Link>
-            <Link to="/today" className="nav-item">
-              <span className="nav-icon upcoming-nav-icon">
-                <NavIcon type="today" />
-              </span>
-              Today
-            </Link>
-            <Link to="/upcoming" className="nav-item active">
-              <span className="nav-icon upcoming-nav-icon">
-                <NavIcon type="upcoming" />
-              </span>
-              Upcoming
-            </Link>
-          </nav>
-
-          <div className="sidebar-bottom">
-            <div className="user-card">
-              <div className="user-avatar">{userInitial}</div>
-              <div className="user-details">
-                <strong>{currentUser?.name || "User"}</strong>
-                <span>{currentUser?.email}</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="sidebar-secondary-action"
-              onClick={turnOnNotifications}
-            >
-              Notifications
-            </button>
-            <button
-              type="button"
-              className="sidebar-secondary-action"
-              onClick={logout}
-            >
-              Log out
-            </button>
-          </div>
-
-          <button
-            type="button"
-            className="mobile-profile-trigger"
-            aria-label="Open profile and settings"
-            aria-expanded={showAccountMenu}
-            onClick={() => setShowAccountMenu((current) => !current)}
-          >
-            {userInitial}
-          </button>
-        </aside>
-
-        {showAccountMenu && (
-          <section className="mobile-account-panel">
-            <div className="mobile-account-heading">
-              <div className="user-avatar">{userInitial}</div>
-              <div className="user-details">
-                <strong>{currentUser?.name || "User"}</strong>
-                <span>{currentUser?.email}</span>
-              </div>
-            </div>
-            <button type="button" onClick={turnOnNotifications}>
-              <span>♢</span>
-              Enable notifications
-            </button>
-            <button type="button" onClick={logout}>
-              <span>↗</span>
-              Log out
-            </button>
-            {notificationMessage && <small>{notificationMessage}</small>}
-          </section>
-        )}
-
-        <main className="dashboard-main upcoming-main">
-          <header className="upcoming-header">
-            <p className="eyebrow">COMING UP</p>
-            <h1>Upcoming</h1>
-            <p>See what's coming up across your lists.</p>
-          </header>
-
-          {actionError && <div className="auth-error">{actionError}</div>}
-
-          {loading ? (
-            <section className="upcoming-empty compact-empty-state">
-              <div className="loading-dot" />
-              <h2>Loading what's ahead...</h2>
-            </section>
-          ) : error ? (
-            <section className="upcoming-empty">
-              <h2>Couldn't load upcoming items</h2>
-              <p>{error}</p>
-              <button type="button" className="primary-button" onClick={fetchItems}>
-                Try again
-              </button>
-            </section>
-          ) : upcomingItems.length === 0 ? (
-            <section className="upcoming-empty">
-              <div className="upcoming-empty-icon">
-                <NavIcon type="upcoming" />
-              </div>
-              <h2>Nothing coming up</h2>
-              <p>Items with future due dates will appear here.</p>
-            </section>
-          ) : (
-            <div className="upcoming-groups">
-              {renderUpcomingGroup("Tomorrow", tomorrowItems)}
-              {renderUpcomingGroup("Later this week", thisWeekItems)}
-              {renderUpcomingGroup("Later", laterItems)}
-            </div>
-          )}
-        </main>
-
-        <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
-          <Link to="/" className="mobile-bottom-nav-item">
-            <span className="mobile-nav-icon upcoming-mobile-nav-icon">
-              <NavIcon type="lists" />
-            </span>
-            <span>Lists</span>
-          </Link>
-          <Link to="/today" className="mobile-bottom-nav-item">
-            <span className="mobile-nav-icon upcoming-mobile-nav-icon">
-              <NavIcon type="today" />
-            </span>
-            <span>Today</span>
-          </Link>
-          <Link to="/upcoming" className="mobile-bottom-nav-item active">
-            <span className="mobile-nav-icon upcoming-mobile-nav-icon">
-              <NavIcon type="upcoming" />
-            </span>
-            <span>Upcoming</span>
-          </Link>
-          <button
-            type="button"
-            className={`mobile-bottom-nav-item ${showAccountMenu ? "active" : ""}`}
-            onClick={() => setShowAccountMenu((current) => !current)}
-          >
-            <span className="mobile-nav-avatar">{userInitial}</span>
-            <span>Profile</span>
-          </button>
-        </nav>
-      </div>
-    );
-  }
+  const isTodayMode = mode === "today";
+  const pageHasItems = isTodayMode
+    ? overdueItems.length + todayItems.length > 0
+    : upcomingItems.length > 0;
 
   return (
-    <div className="dashboard-layout">
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-mark">O</div>
-          <span>OddsnSods</span>
-        </div>
+    <div className="dashboard-layout concept-one-dashboard upcoming-dashboard">
+      <aside className="sidebar concept-one-sidebar upcoming-sidebar">
+        <Link to="/" className="upcoming-brand" aria-label="OddsnSods home">
+          <img src="/oddsnsods-logo.png" alt="OddsnSods" />
+        </Link>
 
-        <nav className="sidebar-nav">
+        <nav className="sidebar-nav" aria-label="Main navigation">
           <Link to="/" className="nav-item">
-            <span>☰</span>
+            <span className="nav-icon upcoming-nav-icon">
+              <NavIcon type="lists" />
+            </span>
             My Lists
           </Link>
-          <Link to="/today" className="nav-item active">
-            <span>○</span>
+          <Link
+            to="/today"
+            className={`nav-item ${isTodayMode ? "active" : ""}`}
+          >
+            <span className="nav-icon upcoming-nav-icon">
+              <NavIcon type="today" />
+            </span>
             Today
           </Link>
-          <Link to="/upcoming" className="nav-item">
-            <span>◷</span>
+          <Link
+            to="/upcoming"
+            className={`nav-item ${!isTodayMode ? "active" : ""}`}
+          >
+            <span className="nav-icon upcoming-nav-icon">
+              <NavIcon type="upcoming" />
+            </span>
             Upcoming
           </Link>
-          <button className="nav-item disabled" type="button">
-            <span>✓</span>
-            Completed
-          </button>
         </nav>
 
         <div className="sidebar-bottom">
           <div className="user-card">
             <div className="user-avatar">{userInitial}</div>
             <div className="user-details">
-              <strong>{currentUser?.name}</strong>
+              <strong>{currentUser?.name || "User"}</strong>
               <span>{currentUser?.email}</span>
             </div>
           </div>
-          <button className="logout-button" type="button" onClick={logout}>
+          <button
+            type="button"
+            className="sidebar-secondary-action"
+            onClick={turnOnNotifications}
+          >
+            Notifications
+          </button>
+          <button
+            type="button"
+            className="sidebar-secondary-action"
+            onClick={logout}
+          >
             Log out
           </button>
         </div>
+
+        <button
+          type="button"
+          className="mobile-profile-trigger"
+          aria-label="Open profile and settings"
+          aria-expanded={showAccountMenu}
+          onClick={() => setShowAccountMenu((current) => !current)}
+        >
+          {userInitial}
+        </button>
       </aside>
 
-      <main className="dashboard-main">
-        <header className="overview-header">
-          <p className="eyebrow">TODAY</p>
-          <h1>Today</h1>
-          <p>Items that need attention now.</p>
+      {showAccountMenu && (
+        <section className="mobile-account-panel">
+          <div className="mobile-account-heading">
+            <div className="user-avatar">{userInitial}</div>
+            <div className="user-details">
+              <strong>{currentUser?.name || "User"}</strong>
+              <span>{currentUser?.email}</span>
+            </div>
+          </div>
+          <button type="button" onClick={turnOnNotifications}>
+            <span>♢</span>
+            Enable notifications
+          </button>
+          <button type="button" onClick={logout}>
+            <span>↗</span>
+            Log out
+          </button>
+          {notificationMessage && <small>{notificationMessage}</small>}
+        </section>
+      )}
+
+      <main className="dashboard-main upcoming-main">
+        <header className="upcoming-header">
+          <p className="eyebrow">{isTodayMode ? "TODAY" : "COMING UP"}</p>
+          <h1>{isTodayMode ? "Today" : "Upcoming"}</h1>
+          <p>
+            {isTodayMode
+              ? "See what needs your attention today."
+              : "See what's coming up across your lists."}
+          </p>
         </header>
 
         {actionError && <div className="auth-error">{actionError}</div>}
 
         {loading ? (
-          <div className="overview-empty">Loading...</div>
+          <section className="upcoming-empty compact-empty-state">
+            <div className="loading-dot" />
+            <h2>{isTodayMode ? "Loading today's tasks..." : "Loading what's ahead..."}</h2>
+          </section>
         ) : error ? (
-          <div className="overview-empty">
-            <h3>Couldn't load these items</h3>
+          <section className="upcoming-empty">
+            <h2>
+              {isTodayMode
+                ? "Couldn't load today's items"
+                : "Couldn't load upcoming items"}
+            </h2>
             <p>{error}</p>
             <button type="button" className="primary-button" onClick={fetchItems}>
               Try again
             </button>
-          </div>
+          </section>
+        ) : !pageHasItems ? (
+          <section className="upcoming-empty">
+            <div className="upcoming-empty-icon">
+              <NavIcon type={isTodayMode ? "today" : "upcoming"} />
+            </div>
+            <h2>{isTodayMode ? "Nothing due today" : "Nothing coming up"}</h2>
+            <p>
+              {isTodayMode
+                ? "You're clear for now."
+                : "Items with future due dates will appear here."}
+            </p>
+          </section>
         ) : (
-          <>
-            {overdueItems.length > 0 && (
-              <section className="overview-section">
-                <div className="overview-section-heading">
-                  <h2 className="overdue-heading">Overdue</h2>
-                  <span>{overdueItems.length}</span>
-                </div>
-                <div className="overview-task-list">
-                  {overdueItems.map((item) => renderOverviewItem(item, "overview"))}
-                </div>
-              </section>
+          <div className="upcoming-groups">
+            {isTodayMode ? (
+              <>
+                {renderGroup("Overdue", overdueItems, "overdue")}
+                {renderGroup("Today", todayItems, "today")}
+              </>
+            ) : (
+              <>
+                {renderGroup("Tomorrow", tomorrowItems)}
+                {renderGroup("Later this week", thisWeekItems)}
+                {renderGroup("Later", laterItems)}
+              </>
             )}
-
-            <section className="overview-section">
-              <div className="overview-section-heading">
-                <h2>Today</h2>
-                <span>{todayItems.length}</span>
-              </div>
-
-              {todayItems.length > 0 ? (
-                <div className="overview-task-list">
-                  {todayItems.map((item) => renderOverviewItem(item, "overview"))}
-                </div>
-              ) : (
-                <div className="overview-empty">
-                  <div className="overview-empty-icon">✓</div>
-                  <h3>Nothing due today</h3>
-                  <p>You're clear for now.</p>
-                </div>
-              )}
-            </section>
-          </>
+          </div>
         )}
       </main>
+
+      <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
+        <Link to="/" className="mobile-bottom-nav-item">
+          <span className="mobile-nav-icon upcoming-mobile-nav-icon">
+            <NavIcon type="lists" />
+          </span>
+          <span>Lists</span>
+        </Link>
+        <Link
+          to="/today"
+          className={`mobile-bottom-nav-item ${isTodayMode ? "active" : ""}`}
+        >
+          <span className="mobile-nav-icon upcoming-mobile-nav-icon">
+            <NavIcon type="today" />
+          </span>
+          <span>Today</span>
+        </Link>
+        <Link
+          to="/upcoming"
+          className={`mobile-bottom-nav-item ${!isTodayMode ? "active" : ""}`}
+        >
+          <span className="mobile-nav-icon upcoming-mobile-nav-icon">
+            <NavIcon type="upcoming" />
+          </span>
+          <span>Upcoming</span>
+        </Link>
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item ${showAccountMenu ? "active" : ""}`}
+          onClick={() => setShowAccountMenu((current) => !current)}
+        >
+          <span className="mobile-nav-avatar">{userInitial}</span>
+          <span>Profile</span>
+        </button>
+      </nav>
     </div>
   );
 }
