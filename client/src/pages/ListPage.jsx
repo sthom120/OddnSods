@@ -54,7 +54,7 @@ function ListPage() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [showAddDetails, setShowAddDetails] = useState(false);
 
-  const [showCompleted, setShowCompleted] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const [editingItemId, setEditingItemId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
@@ -107,7 +107,7 @@ function ListPage() {
         if (savedShowCompleted !== null) {
           setShowCompleted(savedShowCompleted === "true");
         } else {
-          setShowCompleted(listData.settings?.showCompleted ?? true);
+          setShowCompleted(false);
         }
       } catch (error) {
         if (cancelled) return;
@@ -378,13 +378,6 @@ function ListPage() {
     }
   };
 
-  const formatDueDate = (date) => {
-    if (!date) return "";
-    const dateOnly = date.split("T")[0];
-    const [year, month, day] = dateOnly.split("-");
-    return `${day}/${month}/${year}`;
-  };
-
   const getLocalDateString = (date = new Date()) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -399,6 +392,7 @@ function ListPage() {
 
   const formatTaskDueDate = (date) => {
     if (!date) return "";
+
     const dateOnly = date.split("T")[0];
     const today = new Date();
     const tomorrow = new Date(today);
@@ -406,7 +400,13 @@ function ListPage() {
 
     if (dateOnly === getLocalDateString(today)) return "Today";
     if (dateOnly === getLocalDateString(tomorrow)) return "Tomorrow";
-    return formatDueDate(date);
+
+    const [year, month, day] = dateOnly.split("-").map(Number);
+    return new Intl.DateTimeFormat("en-AU", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }).format(new Date(year, month - 1, day));
   };
 
   const formatRecurrence = (frequency) => {
@@ -426,7 +426,7 @@ function ListPage() {
 
   if (loadingPage) {
     return (
-      <main className="list-page-shell clean-list-page clean-list-loading">
+      <main className="list-page-shell notebook-list-page notebook-loading">
         <div className="loading-dot" />
         <p>Loading your list...</p>
       </main>
@@ -435,8 +435,8 @@ function ListPage() {
 
   if (pageError || !list) {
     return (
-      <main className="list-page-shell clean-list-page">
-        <Link to="/" className="clean-back-link">
+      <main className="list-page-shell notebook-list-page">
+        <Link to="/" className="notebook-back-link">
           ‹ My Lists
         </Link>
         <div className="list-empty-items">
@@ -456,28 +456,196 @@ function ListPage() {
 
   const activeItems = items.filter((item) => !item.completed);
   const completedItems = items.filter((item) => item.completed);
-  const visibleItems = showCompleted
-    ? [...activeItems, ...completedItems]
-    : activeItems;
   const incompleteCount = activeItems.length;
   const completedCount = completedItems.length;
+  const totalCount = items.length;
+  const completionPercent = totalCount
+    ? Math.round((completedCount / totalCount) * 100)
+    : 0;
   const allMembers = [list.owner, ...(list.members || [])].filter(Boolean);
   const hasAddDetails =
     list.settings?.assignmentEnabled || list.settings?.dueDatesEnabled;
   const isShared = (list.members?.length || 0) > 0;
 
+  const renderTask = (item) => (
+    <article
+      className={`notebook-task-row ${
+        item.completed ? "task-completed" : ""
+      }`}
+      key={item._id}
+    >
+      {editingItemId === item._id ? (
+        <div className="modern-edit-form notebook-edit-form">
+          <label>
+            Item
+            <input
+              type="text"
+              value={editingTitle}
+              onChange={(e) => setEditingTitle(e.target.value)}
+            />
+          </label>
+
+          <div className="edit-field-grid">
+            {list.settings?.assignmentEnabled && (
+              <label>
+                Assigned to
+                <select
+                  value={editingAssignedTo}
+                  onChange={(e) => setEditingAssignedTo(e.target.value)}
+                >
+                  <option value="">Anyone</option>
+                  {allMembers.map((member) => (
+                    <option key={member._id} value={member._id}>
+                      {member.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {list.settings?.dueDatesEnabled && (
+              <label>
+                Due date
+                <input
+                  type="date"
+                  value={editingDueDate}
+                  onChange={(e) => setEditingDueDate(e.target.value)}
+                />
+              </label>
+            )}
+
+            {list.settings?.dueDatesEnabled && (
+              <label>
+                Repeat
+                <select
+                  value={editingRecurrence}
+                  onChange={(e) => setEditingRecurrence(e.target.value)}
+                >
+                  <option value="">Doesn't repeat</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="fortnightly">Fortnightly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </label>
+            )}
+          </div>
+
+          {editingError && (
+            <p className="form-error-message">{editingError}</p>
+          )}
+
+          <div className="modern-edit-actions">
+            <button
+              type="button"
+              className="secondary-modern-button"
+              onClick={cancelItemEdit}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="primary-modern-button"
+              onClick={() => saveItemEdit(item._id)}
+            >
+              Save changes
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <label className="task-check-area notebook-task-check">
+            <input
+              type="checkbox"
+              checked={item.completed}
+              onChange={() => toggleItem(item)}
+            />
+            <span className="custom-task-checkbox">✓</span>
+          </label>
+
+          <div className="notebook-task-content">
+            <h3>{item.title}</h3>
+
+            {list.settings?.assignmentEnabled ||
+            item.dueDate ||
+            item.recurrence?.frequency ? (
+              <div className="notebook-task-meta">
+                {list.settings?.assignmentEnabled && (
+                  <span className="notebook-person-meta">
+                    <span className="notebook-person-avatar">
+                      {item.assignedTo?.name?.charAt(0).toUpperCase() || "A"}
+                    </span>
+                    {item.assignedTo?.name || "Anyone"}
+                  </span>
+                )}
+
+                {item.dueDate && (
+                  <span
+                    className={`notebook-date-meta ${
+                      isOverdue(item) ? "overdue" : ""
+                    }`}
+                  >
+                    {isOverdue(item) ? "Overdue · " : ""}
+                    {formatTaskDueDate(item.dueDate)}
+                  </span>
+                )}
+
+                {item.recurrence?.frequency && (
+                  <span className="notebook-repeat-meta">
+                    ↻ {formatRecurrence(item.recurrence.frequency)}
+                  </span>
+                )}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="notebook-item-menu-wrap">
+            <button
+              type="button"
+              className="notebook-item-menu-button"
+              aria-label={`Options for ${item.title}`}
+              aria-expanded={openItemMenuId === item._id}
+              onClick={() =>
+                setOpenItemMenuId((current) =>
+                  current === item._id ? null : item._id
+                )
+              }
+            >
+              ⋯
+            </button>
+
+            {openItemMenuId === item._id && (
+              <div className="notebook-menu notebook-item-menu">
+                <button type="button" onClick={() => startEditingItem(item)}>
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  className="notebook-menu-danger"
+                  onClick={() => deleteItem(item._id)}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </article>
+  );
+
   return (
-    <main className="list-page-shell clean-list-page">
-      <div className="clean-list-topbar">
-        <Link to="/" className="clean-back-link">
+    <main className="list-page-shell notebook-list-page">
+      <div className="notebook-list-topbar">
+        <Link to="/" className="notebook-back-link">
           ‹ My Lists
         </Link>
 
         {isOwner && (
-          <div className="clean-list-menu-wrap">
+          <div className="notebook-list-menu-wrap">
             <button
               type="button"
-              className="clean-more-button"
+              className="notebook-more-button"
               aria-label="List options"
               aria-expanded={showListMenu}
               onClick={() => setShowListMenu((current) => !current)}
@@ -486,7 +654,7 @@ function ListPage() {
             </button>
 
             {showListMenu && (
-              <div className="clean-menu clean-list-menu">
+              <div className="notebook-menu notebook-list-menu">
                 <button
                   type="button"
                   onClick={() => {
@@ -513,55 +681,105 @@ function ListPage() {
       </div>
 
       {actionError && (
-        <p className="form-error-message clean-page-error">{actionError}</p>
+        <p className="form-error-message notebook-page-error">{actionError}</p>
       )}
 
-      <section className="clean-list-hero">
-        <h1>{list.name}</h1>
+      <section className="notebook-list-hero">
+        <div className="notebook-title-row">
+          <div className="notebook-list-icon">
+            {list.name.charAt(0).toUpperCase()}
+          </div>
+          <div className="notebook-title-copy">
+            <h1>{list.name}</h1>
 
-        <div className="clean-sharing-summary">
-          {isShared ? (
-            <>
-              <div className="clean-member-avatars" aria-hidden="true">
-                {list.members.slice(0, 3).map((member) => (
-                  <span className="clean-mini-avatar" key={member._id}>
-                    {member.name?.charAt(0).toUpperCase()}
+            <div className="notebook-sharing-summary">
+              {isShared ? (
+                <>
+                  <div className="notebook-member-avatars" aria-hidden="true">
+                    {allMembers.slice(0, 3).map((member) => (
+                      <span
+                        className="notebook-mini-avatar"
+                        key={member._id || member.id}
+                      >
+                        {member.name?.charAt(0).toUpperCase()}
+                      </span>
+                    ))}
+                  </div>
+                  <span>
+                    {list.members.length === 1
+                      ? "Shared with 1 person"
+                      : `Shared with ${list.members.length} people`}
                   </span>
-                ))}
-              </div>
-              <span>
-                {list.members.length === 1
-                  ? `Shared with ${list.members[0]?.name || "1 person"}`
-                  : `Shared with ${list.members.length} people`}
-              </span>
-            </>
-          ) : (
-            <span>Private list</span>
-          )}
+                </>
+              ) : (
+                <span>Private list</span>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className={`clean-quick-add ${composerOpen ? "open" : ""}`}>
-        <form onSubmit={addItem}>
-          <div className="clean-composer-input-row">
-            <span className="clean-composer-plus">+</span>
-            <input
-              type="text"
-              value={newItemTitle}
-              onFocus={() => setComposerOpen(true)}
-              onChange={(e) => {
-                setNewItemTitle(e.target.value);
-                setComposerOpen(true);
-              }}
-              placeholder="What needs to be done?"
-              aria-label="New item"
-            />
-          </div>
+      <section className="notebook-progress" aria-label="List progress">
+        <div className="notebook-progress-copy">
+          <span>
+            {incompleteCount} left
+            {completedCount > 0 ? ` · ${completedCount} completed` : ""}
+          </span>
+          <strong>{completionPercent}%</strong>
+        </div>
+        <div className="notebook-progress-track" aria-hidden="true">
+          <span style={{ width: `${completionPercent}%` }} />
+        </div>
+      </section>
 
+      <section className="notebook-tasks-section">
+        {activeItems.length === 0 ? (
+          <div className="notebook-empty-active">
+            <span>✓</span>
+            <div>
+              <h2>Nothing waiting for you</h2>
+              <p>Add something whenever it comes to mind.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="notebook-task-list">
+            {activeItems.map(renderTask)}
+          </div>
+        )}
+
+        {completedCount > 0 && (
+          <div className="notebook-completed-section">
+            <button
+              type="button"
+              className="notebook-completed-toggle"
+              aria-expanded={showCompleted}
+              onClick={toggleShowCompleted}
+            >
+              <span className={`notebook-completed-chevron ${
+                showCompleted ? "open" : ""
+              }`}>
+                ›
+              </span>
+              <span>Completed ({completedCount})</span>
+            </button>
+
+            {showCompleted && (
+              <div className="notebook-task-list notebook-completed-list">
+                {completedItems.map(renderTask)}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      <section
+        className={`notebook-add-dock ${composerOpen ? "open" : ""}`}
+      >
+        <form onSubmit={addItem}>
           {composerOpen && (
-            <>
+            <div className="notebook-composer-panel">
               {showAddDetails && hasAddDetails && (
-                <div className="clean-add-details">
+                <div className="notebook-add-details">
                   {list.settings?.assignmentEnabled && (
                     <label>
                       <span>Assign to</span>
@@ -608,241 +826,55 @@ function ListPage() {
                 </div>
               )}
 
-              <div className="clean-composer-actions">
+              <div className="notebook-composer-actions">
                 {hasAddDetails && (
                   <button
                     type="button"
-                    className="clean-details-button"
+                    className="notebook-details-button"
                     onClick={() => setShowAddDetails((current) => !current)}
                   >
                     {showAddDetails ? "Hide details" : "Add details"}
-                    <span aria-hidden="true">{showAddDetails ? "⌃" : "⌄"}</span>
                   </button>
                 )}
-
                 <button
                   type="submit"
-                  className="clean-add-button"
+                  className="notebook-add-button"
                   disabled={!newItemTitle.trim()}
                 >
                   Add item
                 </button>
               </div>
-            </>
+            </div>
           )}
+
+          <div className="notebook-add-main">
+            <span className="notebook-add-plus">+</span>
+            <input
+              type="text"
+              value={newItemTitle}
+              onFocus={() => setComposerOpen(true)}
+              onChange={(e) => {
+                setNewItemTitle(e.target.value);
+                setComposerOpen(true);
+              }}
+              placeholder="Add a new task..."
+              aria-label="New item"
+            />
+            <button
+              type="button"
+              className="notebook-add-expand"
+              aria-label={composerOpen ? "Collapse add item" : "Open add item"}
+              onClick={() => setComposerOpen((current) => !current)}
+            >
+              {composerOpen ? "⌃" : "⌄"}
+            </button>
+          </div>
         </form>
 
         {newItemError && (
-          <p className="form-error-message clean-add-error">{newItemError}</p>
-        )}
-      </section>
-
-      <section className="clean-tasks-section">
-        <div className="clean-tasks-header">
-          <div>
-            <h2>Items</h2>
-            <p>
-              {incompleteCount} {incompleteCount === 1 ? "item" : "items"} left
-            </p>
-          </div>
-
-          {completedCount > 0 && (
-            <button
-              type="button"
-              className="clean-completed-toggle"
-              onClick={toggleShowCompleted}
-            >
-              {showCompleted
-                ? "Hide completed"
-                : `Completed (${completedCount})`}
-            </button>
-          )}
-        </div>
-
-        {visibleItems.length === 0 ? (
-          <div className="list-empty-items clean-empty-items">
-            <div className="list-empty-check">✓</div>
-            <h3>Nothing waiting for you</h3>
-            <p>Add something whenever it comes to mind.</p>
-          </div>
-        ) : (
-          <div className="clean-task-list">
-            {visibleItems.map((item) => (
-              <article
-                className={`clean-task-card ${
-                  item.completed ? "task-completed" : ""
-                }`}
-                key={item._id}
-              >
-                {editingItemId === item._id ? (
-                  <div className="modern-edit-form clean-edit-form">
-                    <label>
-                      Item
-                      <input
-                        type="text"
-                        value={editingTitle}
-                        onChange={(e) => setEditingTitle(e.target.value)}
-                      />
-                    </label>
-
-                    <div className="edit-field-grid">
-                      {list.settings?.assignmentEnabled && (
-                        <label>
-                          Assigned to
-                          <select
-                            value={editingAssignedTo}
-                            onChange={(e) =>
-                              setEditingAssignedTo(e.target.value)
-                            }
-                          >
-                            <option value="">Anyone</option>
-                            {allMembers.map((member) => (
-                              <option key={member._id} value={member._id}>
-                                {member.name}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      )}
-
-                      {list.settings?.dueDatesEnabled && (
-                        <label>
-                          Due date
-                          <input
-                            type="date"
-                            value={editingDueDate}
-                            onChange={(e) => setEditingDueDate(e.target.value)}
-                          />
-                        </label>
-                      )}
-
-                      {list.settings?.dueDatesEnabled && (
-                        <label>
-                          Repeat
-                          <select
-                            value={editingRecurrence}
-                            onChange={(e) =>
-                              setEditingRecurrence(e.target.value)
-                            }
-                          >
-                            <option value="">Doesn't repeat</option>
-                            <option value="daily">Daily</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="fortnightly">Fortnightly</option>
-                            <option value="monthly">Monthly</option>
-                          </select>
-                        </label>
-                      )}
-                    </div>
-
-                    {editingError && (
-                      <p className="form-error-message">{editingError}</p>
-                    )}
-
-                    <div className="modern-edit-actions">
-                      <button
-                        type="button"
-                        className="secondary-modern-button"
-                        onClick={cancelItemEdit}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        className="primary-modern-button"
-                        onClick={() => saveItemEdit(item._id)}
-                      >
-                        Save changes
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <label className="task-check-area clean-task-check">
-                      <input
-                        type="checkbox"
-                        checked={item.completed}
-                        onChange={() => toggleItem(item)}
-                      />
-                      <span className="custom-task-checkbox">✓</span>
-                    </label>
-
-                    <div className="clean-task-content">
-                      <h3>{item.title}</h3>
-
-                      {(item.assignedTo ||
-                        item.dueDate ||
-                        item.recurrence?.frequency) && (
-                        <div className="clean-task-meta">
-                          {item.assignedTo && (
-                            <span className="clean-person-meta">
-                              <span className="clean-person-avatar">
-                                {item.assignedTo.name
-                                  ?.charAt(0)
-                                  .toUpperCase()}
-                              </span>
-                              {item.assignedTo.name}
-                            </span>
-                          )}
-
-                          {item.dueDate && (
-                            <span
-                              className={`clean-date-meta ${
-                                isOverdue(item) ? "overdue" : ""
-                              }`}
-                            >
-                              {isOverdue(item) ? "Overdue · " : ""}
-                              {formatTaskDueDate(item.dueDate)}
-                            </span>
-                          )}
-
-                          {item.recurrence?.frequency && (
-                            <span className="clean-repeat-meta">
-                              ↻ {formatRecurrence(item.recurrence.frequency)}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="clean-item-menu-wrap">
-                      <button
-                        type="button"
-                        className="clean-item-menu-button"
-                        aria-label={`Options for ${item.title}`}
-                        aria-expanded={openItemMenuId === item._id}
-                        onClick={() =>
-                          setOpenItemMenuId((current) =>
-                            current === item._id ? null : item._id
-                          )
-                        }
-                      >
-                        ⋯
-                      </button>
-
-                      {openItemMenuId === item._id && (
-                        <div className="clean-menu clean-item-menu">
-                          <button
-                            type="button"
-                            onClick={() => startEditingItem(item)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            className="clean-menu-danger"
-                            onClick={() => deleteItem(item._id)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </article>
-            ))}
-          </div>
+          <p className="form-error-message notebook-add-error">
+            {newItemError}
+          </p>
         )}
       </section>
 
@@ -1006,21 +1038,21 @@ function ListPage() {
 
       <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
         <Link to="/" className="mobile-bottom-nav-item active">
-          <span className="clean-mobile-nav-icon">
+          <span className="notebook-mobile-nav-icon">
             <NavIcon type="lists" />
           </span>
           <span>Lists</span>
         </Link>
 
         <Link to="/today" className="mobile-bottom-nav-item">
-          <span className="clean-mobile-nav-icon">
+          <span className="notebook-mobile-nav-icon">
             <NavIcon type="today" />
           </span>
           <span>Today</span>
         </Link>
 
         <Link to="/upcoming" className="mobile-bottom-nav-item">
-          <span className="clean-mobile-nav-icon">
+          <span className="notebook-mobile-nav-icon">
             <NavIcon type="upcoming" />
           </span>
           <span>Upcoming</span>
