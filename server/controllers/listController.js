@@ -52,8 +52,17 @@ const createList = async (req, res) => {
   try {
     const { name, settings } = req.body;
 
+    if (
+      typeof name !== "string" ||
+      !name.trim()
+    ) {
+      return res.status(400).json({
+        message: "List name is required",
+      });
+    }
+
     const list = await List.create({
-      name,
+      name: name.trim(),
       settings,
       owner: req.user._id,
       members: [],
@@ -69,12 +78,65 @@ const createList = async (req, res) => {
 
 const updateList = async (req, res) => {
   try {
+    const updateData = {};
+
+    if (req.body.name !== undefined) {
+      if (
+        typeof req.body.name !== "string" ||
+        !req.body.name.trim()
+      ) {
+        return res.status(400).json({
+          message: "List name cannot be empty",
+        });
+      }
+
+      updateData.name = req.body.name.trim();
+    }
+
+    if (req.body.settings !== undefined) {
+      if (
+        !req.body.settings ||
+        typeof req.body.settings !== "object" ||
+        Array.isArray(req.body.settings)
+      ) {
+        return res.status(400).json({
+          message: "Invalid list settings",
+        });
+      }
+
+      const allowedSettings = [
+        "dueDatesEnabled",
+        "assignmentEnabled",
+        "showCompleted",
+      ];
+
+      for (const settingName of allowedSettings) {
+        if (
+          req.body.settings[settingName] !== undefined
+        ) {
+          if (
+            typeof req.body.settings[settingName] !==
+            "boolean"
+          ) {
+            return res.status(400).json({
+              message: `${settingName} must be true or false`,
+            });
+          }
+
+          updateData[`settings.${settingName}`] =
+            req.body.settings[settingName];
+        }
+      }
+    }
+
     const list = await List.findOneAndUpdate(
       {
         _id: req.params.id,
         owner: req.user._id,
       },
-      req.body,
+      {
+        $set: updateData,
+      },
       {
         new: true,
         runValidators: true,
@@ -128,6 +190,15 @@ const shareList = async (req, res) => {
   try {
     const { email } = req.body;
 
+    if (
+      typeof email !== "string" ||
+      !email.trim()
+    ) {
+      return res.status(400).json({
+        message: "Email is required",
+      });
+    }
+
     const list = await List.findOne({
       _id: req.params.id,
       owner: req.user._id,
@@ -140,7 +211,7 @@ const shareList = async (req, res) => {
     }
 
     const userToAdd = await User.findOne({
-      email: email.toLowerCase(),
+      email: email.trim().toLowerCase(),
     });
 
     if (!userToAdd) {
