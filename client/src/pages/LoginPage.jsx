@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiFetch } from "../api";
+import "../AuthConcept.css";
 
 function LoginPage() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,90 +28,85 @@ function LoginPage() {
       });
 
       localStorage.setItem("token", data.token);
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
-
+      localStorage.setItem("user", JSON.stringify(data.user));
       navigate("/");
-    } catch (error) {
-      setError(error.message);
+    } catch (loginError) {
+      setError(loginError.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="simple-auth-page">
-      <section className="simple-auth-card">
-        <div className="simple-auth-logo">
-          <div className="simple-auth-mark">O</div>
+    <main className="auth-concept-page">
+      <div className="auth-concept-shell">
+        <Link to="/login" className="auth-concept-brand" aria-label="OddsnSods">
+          <img src="/oddsnsods-logo.png" alt="OddsnSods" />
+        </Link>
 
-          <h1>OddsnSods</h1>
-        </div>
+        <section className="auth-concept-card">
+          <header className="auth-concept-heading">
+            <h1>Welcome back</h1>
+            <p>Keep everything somewhere other than your head.</p>
+          </header>
 
-        <p className="simple-auth-tagline">
-          Lists for all the bits and pieces.
-        </p>
+          <form className="auth-concept-form" onSubmit={handleSubmit}>
+            <label className="auth-concept-field">
+              <span>Email</span>
+              <input
+                className="auth-concept-input"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                autoComplete="email"
+              />
+            </label>
 
-        <form
-          className="simple-auth-form"
-          onSubmit={handleSubmit}
-        >
-          <label>
-            Email
+            <label className="auth-concept-field">
+              <span>Password</span>
+              <div className="auth-password-wrap">
+                <input
+                  className="auth-concept-input"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Your password"
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="auth-password-toggle"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+            </label>
 
-            <input
-              type="email"
-              value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
-              placeholder="you@example.com"
-              required
-              autoComplete="email"
-            />
-          </label>
+            {error && (
+              <div className="auth-concept-error" role="alert">
+                {error}
+              </div>
+            )}
 
-          <label>
-            Password
+            <button
+              type="submit"
+              className="auth-concept-submit"
+              disabled={loading}
+            >
+              {loading ? "Logging in..." : "Log in"}
+            </button>
+          </form>
 
-            <input
-              type="password"
-              value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
-              placeholder="Password"
-              required
-              autoComplete="current-password"
-            />
-          </label>
-
-          {error && (
-            <div className="auth-error">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="simple-auth-button"
-            disabled={loading}
-          >
-            {loading
-              ? "Logging in..."
-              : "Log in"}
-          </button>
-        </form>
-
-        <p className="simple-auth-switch">
-          New to OddsnSods?{" "}
-          <Link to="/register">
-            Create an account
-          </Link>
-        </p>
-      </section>
+          <p className="auth-concept-switch">
+            New to OddsnSods? <Link to="/register">Create an account</Link>
+          </p>
+        </section>
+      </div>
     </main>
   );
 }
