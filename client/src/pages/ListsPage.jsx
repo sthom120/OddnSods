@@ -6,6 +6,44 @@ import {
   syncNotificationsIfAllowed,
   unregisterNotifications,
 } from "../notifications";
+import "../MyListsPolish.css";
+
+function NavIcon({ type }) {
+  if (type === "lists") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 6h10M9 12h10M9 18h10" />
+        <path d="M5 6h.01M5 12h.01M5 18h.01" />
+      </svg>
+    );
+  }
+
+  if (type === "today") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="4" y="5" width="16" height="15" rx="2" />
+        <path d="M8 3v4M16 3v4M4 9h16" />
+        <path d="M8 13h3v3H8z" />
+      </svg>
+    );
+  }
+
+  if (type === "upcoming") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3.5 2" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8.5 12 2.2 2.2 4.8-5" />
+    </svg>
+  );
+}
 
 function ListsPage() {
   const [lists, setLists] = useState([]);
@@ -188,22 +226,30 @@ function ListsPage() {
 
         <nav className="sidebar-nav" aria-label="Main navigation">
           <Link to="/" className="nav-item active">
-            <span className="nav-icon">☷</span>
+            <span className="nav-icon polished-nav-icon">
+              <NavIcon type="lists" />
+            </span>
             My Lists
           </Link>
 
           <Link to="/today" className="nav-item">
-            <span className="nav-icon">○</span>
+            <span className="nav-icon polished-nav-icon">
+              <NavIcon type="today" />
+            </span>
             Today
           </Link>
 
           <Link to="/upcoming" className="nav-item">
-            <span className="nav-icon">◷</span>
+            <span className="nav-icon polished-nav-icon">
+              <NavIcon type="upcoming" />
+            </span>
             Upcoming
           </Link>
 
           <button className="nav-item disabled" type="button">
-            <span className="nav-icon">✓</span>
+            <span className="nav-icon polished-nav-icon">
+              <NavIcon type="completed" />
+            </span>
             Completed
           </button>
         </nav>
@@ -384,10 +430,13 @@ function ListsPage() {
                 list.owner === currentUser?.id;
 
               const isShared = list.members?.length > 0;
+              const sharedLabel = `Shared with ${
+                list.members?.length || 0
+              } ${list.members?.length === 1 ? "person" : "people"}`;
 
               return (
                 <article
-                  className={`dashboard-list-card concept-one-list-card ${getListColourClass(
+                  className={`dashboard-list-card concept-one-list-card polished-list-card ${getListColourClass(
                     index
                   )}`}
                   key={list._id}
@@ -428,107 +477,94 @@ function ListsPage() {
                       </div>
                     </div>
                   ) : (
-                    <>
-                      <div className="list-card-row">
-                        <Link
-                          to={`/list/${list._id}`}
-                          className="dashboard-card-link concept-one-card-link"
-                        >
-                          <div className="list-card-icon">
-                            {list.name.charAt(0).toUpperCase()}
-                          </div>
+                    <div className="list-card-row polished-list-card-row">
+                      <Link
+                        to={`/list/${list._id}`}
+                        className="dashboard-card-link concept-one-card-link polished-card-link"
+                        aria-label={`Open ${list.name}`}
+                      >
+                        <div className="list-card-icon">
+                          {list.name.charAt(0).toUpperCase()}
+                        </div>
 
-                          <div className="list-card-copy">
-                            <h2>{list.name}</h2>
-                            <div className="list-card-status-row">
-                              <span
-                                className={`list-privacy-badge ${
-                                  isShared ? "shared" : "private"
-                                }`}
-                              >
-                                {isShared ? "Shared" : "Private"}
-                              </span>
+                        <div className="list-card-copy">
+                          <h2>{list.name}</h2>
 
-                              <span className="list-card-description">
-                                {isShared
-                                  ? `with ${list.members.length} ${
-                                      list.members.length === 1
-                                        ? "person"
-                                        : "people"
-                                    }`
-                                  : "Just for you"}
-                              </span>
-                            </div>
-                          </div>
-
-                          <span className="list-card-chevron" aria-hidden="true">
-                            ›
-                          </span>
-                        </Link>
-
-                        {userOwnsList && (
-                          <div className="list-card-menu-wrap">
-                            <button
-                              type="button"
-                              className="list-card-menu-button"
-                              aria-label={`More options for ${list.name}`}
-                              aria-expanded={openMenuListId === list._id}
-                              onClick={() =>
-                                setOpenMenuListId((current) =>
-                                  current === list._id ? null : list._id
-                                )
-                              }
+                          <div className="list-card-status-row polished-status-row">
+                            <span
+                              className={`polished-status-pill ${
+                                isShared ? "shared" : "private"
+                              }`}
                             >
-                              ⋯
-                            </button>
+                              {isShared ? sharedLabel : "Private"}
+                            </span>
 
-                            {openMenuListId === list._id && (
-                              <div className="list-card-menu">
-                                <button
-                                  type="button"
-                                  onClick={() => startEditing(list)}
-                                >
-                                  Rename
-                                </button>
-                                <button
-                                  type="button"
-                                  className="menu-danger"
-                                  onClick={() => deleteList(list._id)}
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {isShared && (
-                        <div className="dashboard-card-footer concept-one-card-footer">
-                          <div className="member-avatars" aria-label="List members">
-                            {list.members.slice(0, 3).map((member) => (
+                            {isShared && (
                               <div
-                                className="mini-avatar"
-                                key={member._id}
-                                title={member.name}
+                                className="inline-member-avatars"
+                                aria-label={sharedLabel}
                               >
-                                {member.name?.charAt(0).toUpperCase()}
-                              </div>
-                            ))}
+                                {list.members
+                                  .slice(0, 3)
+                                  .map((member) => (
+                                    <div
+                                      className="mini-avatar"
+                                      key={member._id}
+                                      title={member.name}
+                                    >
+                                      {member.name
+                                        ?.charAt(0)
+                                        .toUpperCase()}
+                                    </div>
+                                  ))}
 
-                            {list.members.length > 3 && (
-                              <div className="mini-avatar mini-avatar-more">
-                                +{list.members.length - 3}
+                                {list.members.length > 3 && (
+                                  <div className="mini-avatar mini-avatar-more">
+                                    +{list.members.length - 3}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
+                        </div>
+                      </Link>
 
-                          <span className="shared-note">
-                            Shared space
-                          </span>
+                      {userOwnsList && (
+                        <div className="list-card-menu-wrap">
+                          <button
+                            type="button"
+                            className="list-card-menu-button"
+                            aria-label={`More options for ${list.name}`}
+                            aria-expanded={openMenuListId === list._id}
+                            onClick={() =>
+                              setOpenMenuListId((current) =>
+                                current === list._id ? null : list._id
+                              )
+                            }
+                          >
+                            ⋯
+                          </button>
+
+                          {openMenuListId === list._id && (
+                            <div className="list-card-menu">
+                              <button
+                                type="button"
+                                onClick={() => startEditing(list)}
+                              >
+                                Rename
+                              </button>
+                              <button
+                                type="button"
+                                className="menu-danger"
+                                onClick={() => deleteList(list._id)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
-                    </>
+                    </div>
                   )}
                 </article>
               );
@@ -539,17 +575,23 @@ function ListsPage() {
 
       <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
         <Link to="/" className="mobile-bottom-nav-item active">
-          <span className="mobile-nav-icon">☷</span>
+          <span className="mobile-nav-icon polished-mobile-nav-icon">
+            <NavIcon type="lists" />
+          </span>
           <span>Lists</span>
         </Link>
 
         <Link to="/today" className="mobile-bottom-nav-item">
-          <span className="mobile-nav-icon">○</span>
+          <span className="mobile-nav-icon polished-mobile-nav-icon">
+            <NavIcon type="today" />
+          </span>
           <span>Today</span>
         </Link>
 
         <Link to="/upcoming" className="mobile-bottom-nav-item">
-          <span className="mobile-nav-icon">◷</span>
+          <span className="mobile-nav-icon polished-mobile-nav-icon">
+            <NavIcon type="upcoming" />
+          </span>
           <span>Upcoming</span>
         </Link>
 
