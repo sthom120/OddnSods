@@ -59,6 +59,19 @@ const itemSchema = new mongoose.Schema(
       match: /^\d{4}-\d{2}-\d{2}$/,
     },
 
+    dueReminderDateKey: {
+      type: String,
+      default: null,
+      match: /^\d{4}-\d{2}-\d{2}$/,
+    },
+
+    dueReminderSentTo: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -120,6 +133,9 @@ const itemSchema = new mongoose.Schema(
           }
         }
 
+        delete ret.dueReminderDateKey;
+        delete ret.dueReminderSentTo;
+
         return ret;
       },
     },
@@ -139,5 +155,10 @@ itemSchema.index(
     },
   }
 );
+
+itemSchema.index({
+  dueDateKey: 1,
+  completed: 1,
+});
 
 module.exports = mongoose.model("Item", itemSchema);
