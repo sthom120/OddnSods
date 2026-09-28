@@ -2,6 +2,7 @@ const express = require("express");
 
 const {
   registerInstallation,
+  unregisterInstallation,
   sendTestNotification,
 } = require(
   "../controllers/notificationController"
@@ -18,6 +19,11 @@ router.use(protect);
 router.post(
   "/register",
   registerInstallation
+);
+
+router.delete(
+  "/unregister",
+  unregisterInstallation
 );
 
 router.post(
