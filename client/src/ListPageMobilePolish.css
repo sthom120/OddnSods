@@ -1,0 +1,24 @@
+/* Mobile list-page polish.
+   Keeps the last row clear of the fixed add-item dock and vertically centres
+   simple task rows that do not have assignment/due-date metadata. */
+
+@media (max-width: 760px) {
+  .notebook-list-page .notebook-tasks-section {
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  }
+
+  .notebook-task-row:not(:has(.notebook-task-meta)) {
+    align-items: center;
+  }
+
+  .notebook-task-row:not(:has(.notebook-task-meta)) .notebook-task-check,
+  .notebook-task-row:not(:has(.notebook-task-meta)) .notebook-task-content,
+  .notebook-task-row:not(:has(.notebook-task-meta)) .notebook-item-menu-wrap {
+    align-self: center;
+  }
+
+  .notebook-task-row:not(:has(.notebook-task-meta)) .notebook-task-check,
+  .notebook-task-row:not(:has(.notebook-task-meta)) .notebook-item-menu-wrap {
+    margin-top: 0;
+  }
+}
