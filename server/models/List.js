@@ -11,13 +11,25 @@ const listSchema = new mongoose.Schema(
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: false,
+      required: true,
     },
+
+    members: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
 
     settings: {
       dueDatesEnabled: {
         type: Boolean,
         default: false,
+      },
+
+      assignmentEnabled: {
+        type: Boolean,
+        default: true,
       },
 
       showCompleted: {

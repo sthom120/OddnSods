@@ -1,5 +1,23 @@
 const mongoose = require("mongoose");
 
+const recurrenceSchema = new mongoose.Schema(
+  {
+    frequency: {
+      type: String,
+      enum: [
+        "daily",
+        "weekly",
+        "fortnightly",
+        "monthly",
+      ],
+      required: true,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const itemSchema = new mongoose.Schema(
   {
     listId: {
@@ -41,8 +59,30 @@ const itemSchema = new mongoose.Schema(
       default: null,
     },
 
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
     recurrence: {
-      type: Object,
+      type: recurrenceSchema,
+      default: null,
+    },
+
+    nextOccurrenceDate: {
+      type: Date,
+      default: null,
+    },
+
+    nextOccurrenceCreated: {
+      type: Boolean,
+      default: false,
+    },
+
+    previousOccurrenceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Item",
       default: null,
     },
   },
