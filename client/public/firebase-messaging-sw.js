@@ -1,4 +1,63 @@
-/* global importScripts, firebase */
+/* global importScripts, firebase, clients */
+
+self.addEventListener(
+  "notificationclick",
+  (event) => {
+    event.notification.close();
+
+    const rawPath =
+      event.notification.data?.path;
+
+    const targetPath =
+      typeof rawPath === "string" &&
+      rawPath.startsWith("/")
+        ? rawPath
+        : "/";
+
+    const targetUrl = new URL(
+      targetPath,
+      self.location.origin
+    ).href;
+
+    event.waitUntil(
+      clients
+        .matchAll({
+          type: "window",
+          includeUncontrolled: true,
+        })
+        .then(async (clientList) => {
+          for (const client of clientList) {
+            const clientUrl = new URL(
+              client.url
+            );
+
+            if (
+              clientUrl.origin !==
+              self.location.origin
+            ) {
+              continue;
+            }
+
+            if ("navigate" in client) {
+              await client.navigate(
+                targetUrl
+              );
+            }
+
+            return client.focus();
+          }
+
+          if (clients.openWindow) {
+            return clients.openWindow(
+              targetUrl
+            );
+          }
+
+          return undefined;
+        })
+    );
+  }
+);
 
 importScripts(
   "https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"
@@ -32,10 +91,24 @@ messaging.onBackgroundMessage((payload) => {
     payload.notification?.title ||
     "OddsnSods";
 
+  const listId =
+    payload.data?.listId || null;
+
   const options = {
     body:
       payload.notification?.body ||
       "You have a new notification.",
+
+    data: {
+      type:
+        payload.data?.type || null,
+
+      path: listId
+        ? `/list/${encodeURIComponent(
+            listId
+          )}`
+        : "/",
+    },
   };
 
   self.registration.showNotification(
