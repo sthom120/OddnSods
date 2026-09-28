@@ -18,6 +18,7 @@ import DueItemsPage from "./pages/DueItemsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./App.css";
+import "./MyListsConcept.css";
 
 function App() {
   const navigate = useNavigate();
