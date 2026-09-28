@@ -8,7 +8,7 @@
   width: min(100%, 860px);
   min-height: 100dvh;
   margin: 0 auto;
-  padding: 26px 32px 120px;
+  padding: 24px 32px 116px;
   background:
     radial-gradient(circle at 92% 4%, rgba(112, 90, 231, 0.075), transparent 25%),
     linear-gradient(180deg, #fbf9ff 0%, #f9f8fc 100%);
@@ -24,11 +24,11 @@
 
 .notebook-list-topbar {
   position: relative;
-  min-height: 44px;
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
 .notebook-back-link {
@@ -92,7 +92,7 @@
 }
 
 .notebook-item-menu {
-  top: 39px;
+  top: 36px;
 }
 
 .notebook-menu button {
@@ -122,29 +122,29 @@
 }
 
 .notebook-page-error {
-  margin: -6px 0 20px;
+  margin: -6px 0 18px;
 }
 
 .notebook-list-hero {
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .notebook-title-row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .notebook-list-icon {
-  width: 62px;
-  height: 62px;
+  width: 58px;
+  height: 58px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border-radius: 20px;
+  border-radius: 18px;
   background: #ebe7ff;
   color: #6657e8;
-  font-size: 1.35rem;
+  font-size: 1.28rem;
   font-weight: 800;
   box-shadow: 0 8px 24px rgba(103, 87, 232, 0.08);
 }
@@ -163,13 +163,13 @@
 }
 
 .notebook-sharing-summary {
-  min-height: 29px;
+  min-height: 27px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 9px;
+  gap: 9px;
+  margin-top: 7px;
   color: #7b8090;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 550;
 }
 
@@ -180,8 +180,8 @@
 }
 
 .notebook-mini-avatar {
-  width: 28px;
-  height: 28px;
+  width: 27px;
+  height: 27px;
   display: grid;
   place-items: center;
   margin-right: -7px;
@@ -189,7 +189,7 @@
   border-radius: 50%;
   background: #725ee8;
   color: white;
-  font-size: 0.64rem;
+  font-size: 0.62rem;
   font-weight: 800;
   box-shadow: 0 2px 8px rgba(56, 50, 99, 0.08);
 }
@@ -203,7 +203,8 @@
 }
 
 .notebook-progress {
-  margin: 0 0 18px;
+  width: min(72%, 430px);
+  margin: 0 0 12px;
 }
 
 .notebook-progress-copy {
@@ -211,9 +212,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #7f8494;
-  font-size: 0.75rem;
+  font-size: 0.73rem;
 }
 
 .notebook-progress-copy strong {
@@ -222,10 +223,10 @@
 }
 
 .notebook-progress-track {
-  height: 6px;
+  height: 4px;
   overflow: hidden;
   border-radius: 999px;
-  background: #ebe9f4;
+  background: rgba(226, 223, 239, 0.78);
 }
 
 .notebook-progress-track span {
@@ -238,27 +239,27 @@
 }
 
 .notebook-tasks-section {
-  padding-bottom: 14px;
+  padding-bottom: 12px;
 }
 
 .notebook-task-list {
-  border-top: 1px solid rgba(119, 112, 150, 0.13);
+  border-top: 1px solid rgba(119, 112, 150, 0.095);
 }
 
 .notebook-task-row {
   position: relative;
-  min-height: 76px;
+  min-height: 66px;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  padding: 12px 2px;
-  border-bottom: 1px solid rgba(119, 112, 150, 0.13);
+  gap: 10px;
+  padding: 8px 2px;
+  border-bottom: 1px solid rgba(119, 112, 150, 0.095);
   background: transparent;
 }
 
 .notebook-task-row.task-completed {
-  opacity: 0.76;
+  opacity: 0.72;
 }
 
 .notebook-task-row.task-completed .notebook-task-content h3 {
@@ -268,39 +269,48 @@
 }
 
 .notebook-task-check {
-  align-self: center;
+  align-self: start;
   display: grid;
   place-items: center;
-  padding: 2px;
+  margin-top: 1px;
+  padding: 0;
 }
 
 .notebook-task-row .custom-task-checkbox {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 8px;
 }
 
 .notebook-task-content {
   min-width: 0;
+  align-self: center;
 }
 
 .notebook-task-content h3 {
   margin: 0;
   overflow-wrap: anywhere;
   color: var(--text);
-  font-size: 0.98rem;
+  font-size: 0.96rem;
   font-weight: 680;
-  line-height: 1.32;
+  line-height: 1.28;
 }
 
 .notebook-task-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px 11px;
-  margin-top: 6px;
+  gap: 5px 8px;
+  margin-top: 4px;
   color: #858a99;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
+}
+
+.notebook-task-meta > span + span::before {
+  content: "·";
+  margin-right: 8px;
+  color: #b1b4bf;
+  font-weight: 700;
 }
 
 .notebook-person-meta {
@@ -310,14 +320,14 @@
 }
 
 .notebook-person-avatar {
-  width: 21px;
-  height: 21px;
+  width: 20px;
+  height: 20px;
   display: grid;
   place-items: center;
   border-radius: 50%;
   background: #eeeaff;
   color: #6557df;
-  font-size: 0.57rem;
+  font-size: 0.55rem;
   font-weight: 800;
 }
 
@@ -325,7 +335,7 @@
 .notebook-repeat-meta {
   display: inline-flex;
   align-items: center;
-  min-height: 21px;
+  min-height: 20px;
 }
 
 .notebook-date-meta.overdue {
@@ -333,9 +343,14 @@
   font-weight: 700;
 }
 
+.notebook-item-menu-wrap {
+  align-self: start;
+  margin-top: -5px;
+}
+
 .notebook-item-menu-button {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
 }
 
 .notebook-edit-form {
@@ -357,7 +372,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 22px 4px;
+  padding: 20px 4px;
   color: #858a99;
 }
 
@@ -385,21 +400,21 @@
 }
 
 .notebook-completed-section {
-  margin-top: 12px;
+  margin-top: 6px;
 }
 
 .notebook-completed-toggle {
   width: 100%;
-  min-height: 52px;
+  min-height: 46px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 4px;
+  gap: 9px;
+  padding: 6px 2px;
   border: 0;
   background: transparent;
   color: #727889;
   font: inherit;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 700;
   text-align: left;
 }
@@ -407,7 +422,7 @@
 .notebook-completed-chevron {
   display: inline-block;
   color: #8a8e9d;
-  font-size: 1.25rem;
+  font-size: 1.18rem;
   line-height: 1;
   transform: rotate(0deg);
   transition: transform 140ms ease;
@@ -418,18 +433,18 @@
 }
 
 .notebook-completed-list {
-  margin-top: 2px;
+  margin-top: 0;
 }
 
 .notebook-add-dock {
   position: sticky;
-  bottom: 18px;
+  bottom: 16px;
   z-index: 38;
-  margin-top: 22px;
-  border: 1px solid rgba(111, 99, 165, 0.13);
-  border-radius: 22px;
+  margin-top: 18px;
+  border: 1px solid rgba(111, 99, 165, 0.12);
+  border-radius: 20px;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 12px 38px rgba(44, 43, 70, 0.1);
+  box-shadow: 0 10px 32px rgba(44, 43, 70, 0.09);
   backdrop-filter: blur(16px);
 }
 
@@ -515,36 +530,36 @@
 }
 
 .notebook-add-main {
-  min-height: 64px;
+  min-height: 58px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 11px;
+  gap: 10px;
+  padding: 7px 10px;
 }
 
 .notebook-add-plus {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border-radius: 14px;
+  border-radius: 13px;
   background: #eeeaff;
   color: #6657e8;
-  font-size: 1.35rem;
+  font-size: 1.28rem;
   font-weight: 500;
 }
 
 .notebook-add-main input {
   width: 100%;
   min-width: 0;
-  padding: 10px 2px;
+  padding: 8px 2px;
   border: 0;
   outline: 0;
   background: transparent;
   color: var(--text);
   font: inherit;
-  font-size: 0.96rem;
+  font-size: 0.94rem;
 }
 
 .notebook-add-main input::placeholder {
@@ -552,8 +567,8 @@
 }
 
 .notebook-add-expand {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
@@ -561,8 +576,9 @@
   border: 0;
   border-radius: 12px;
   background: transparent;
-  color: #7f8494;
-  font-size: 1rem;
+  color: #74798a;
+  font-size: 1.08rem;
+  font-weight: 700;
 }
 
 .notebook-add-expand:hover {
@@ -593,124 +609,154 @@
 @media (max-width: 760px) {
   .notebook-list-page {
     width: 100%;
-    padding: 18px 18px 190px;
+    padding: 15px 18px 176px;
   }
 
   .notebook-list-topbar {
-    min-height: 42px;
-    margin-bottom: 20px;
+    min-height: 40px;
+    margin-bottom: 12px;
   }
 
   .notebook-back-link {
-    min-height: 42px;
+    min-height: 40px;
     font-size: 0.87rem;
   }
 
   .notebook-list-hero {
-    margin-bottom: 20px;
+    margin-bottom: 14px;
   }
 
   .notebook-title-row {
-    gap: 14px;
+    gap: 12px;
   }
 
   .notebook-list-icon {
-    width: 54px;
-    height: 54px;
-    border-radius: 18px;
-    font-size: 1.18rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    font-size: 1.12rem;
   }
 
   .notebook-title-copy h1 {
-    font-size: 2.16rem;
+    font-size: 2.08rem;
   }
 
   .notebook-sharing-summary {
-    margin-top: 8px;
-    font-size: 0.78rem;
+    min-height: 25px;
+    margin-top: 5px;
+    font-size: 0.76rem;
+  }
+
+  .notebook-mini-avatar {
+    width: 26px;
+    height: 26px;
   }
 
   .notebook-progress {
-    margin-bottom: 11px;
+    width: min(78%, 350px);
+    margin-bottom: 8px;
   }
 
   .notebook-progress-copy {
-    margin-bottom: 7px;
-    font-size: 0.72rem;
+    margin-bottom: 5px;
+    font-size: 0.7rem;
   }
 
   .notebook-progress-track {
-    height: 5px;
+    height: 4px;
   }
 
   .notebook-task-row {
-    min-height: 72px;
-    gap: 10px;
-    padding: 11px 0;
+    min-height: 62px;
+    gap: 8px;
+    padding: 8px 0;
   }
 
   .notebook-task-row .custom-task-checkbox {
-    width: 27px;
-    height: 27px;
+    width: 25px;
+    height: 25px;
+  }
+
+  .notebook-task-check {
+    margin-top: 0;
   }
 
   .notebook-task-content h3 {
-    font-size: 0.96rem;
+    font-size: 0.94rem;
   }
 
   .notebook-task-meta {
-    gap: 5px 9px;
-    margin-top: 5px;
-    font-size: 0.68rem;
+    gap: 4px 7px;
+    margin-top: 3px;
+    font-size: 0.66rem;
+  }
+
+  .notebook-task-meta > span + span::before {
+    margin-right: 7px;
+  }
+
+  .notebook-person-avatar {
+    width: 19px;
+    height: 19px;
+  }
+
+  .notebook-item-menu-wrap {
+    margin-top: -7px;
   }
 
   .notebook-item-menu-button {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
   }
 
   .notebook-item-menu {
-    top: 40px;
+    top: 36px;
   }
 
   .notebook-completed-section {
-    margin-top: 8px;
+    margin-top: 5px;
   }
 
   .notebook-completed-toggle {
-    min-height: 50px;
-    font-size: 0.82rem;
+    min-height: 44px;
+    font-size: 0.8rem;
   }
 
   .notebook-add-dock {
     position: fixed;
     left: 14px;
     right: 14px;
-    bottom: calc(76px + env(safe-area-inset-bottom));
+    bottom: calc(70px + env(safe-area-inset-bottom));
     z-index: 55;
     width: auto;
     margin: 0;
-    border-radius: 20px;
+    border-radius: 18px;
   }
 
   .notebook-add-main {
-    min-height: 60px;
-    gap: 10px;
-    padding: 7px 10px;
+    min-height: 54px;
+    gap: 9px;
+    padding: 6px 9px;
   }
 
   .notebook-add-plus {
-    width: 40px;
-    height: 40px;
-    border-radius: 13px;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
   }
 
   .notebook-add-main input {
-    font-size: 0.94rem;
+    padding-block: 7px;
+    font-size: 0.92rem;
+  }
+
+  .notebook-add-expand {
+    width: 36px;
+    height: 36px;
   }
 
   .notebook-composer-panel {
-    padding: 12px 12px 4px;
+    padding: 11px 12px 3px;
   }
 
   .notebook-add-details {
@@ -720,7 +766,7 @@
 
   .notebook-add-details select,
   .notebook-add-details input {
-    min-height: 45px;
+    min-height: 44px;
     font-size: 0.79rem;
   }
 
@@ -730,7 +776,7 @@
 
   .notebook-details-button,
   .notebook-add-button {
-    min-height: 42px;
+    min-height: 40px;
   }
 }
 
@@ -740,38 +786,42 @@
   }
 
   .notebook-list-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 15px;
   }
 
   .notebook-title-copy h1 {
-    font-size: 2rem;
+    font-size: 1.96rem;
   }
 
   .notebook-sharing-summary {
-    gap: 8px;
-    font-size: 0.74rem;
+    gap: 7px;
+    font-size: 0.73rem;
   }
 
   .notebook-mini-avatar {
-    width: 26px;
-    height: 26px;
+    width: 25px;
+    height: 25px;
+  }
+
+  .notebook-progress {
+    width: 84%;
   }
 
   .notebook-task-row {
-    grid-template-columns: auto minmax(0, 1fr) 36px;
-    gap: 8px;
+    grid-template-columns: auto minmax(0, 1fr) 34px;
+    gap: 7px;
   }
 
   .notebook-task-row .custom-task-checkbox {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
   }
 
   .notebook-item-menu-button {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
   }
 
   .notebook-add-dock {
