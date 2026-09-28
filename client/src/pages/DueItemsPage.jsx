@@ -445,14 +445,10 @@ function DueItemsPage({ mode }) {
           </span>
           <span>Upcoming</span>
         </Link>
-        <button
-          type="button"
-          className={`mobile-bottom-nav-item ${showAccountMenu ? "active" : ""}`}
-          onClick={() => setShowAccountMenu((current) => !current)}
-        >
+        <Link to="/profile" className="mobile-bottom-nav-item">
           <span className="mobile-nav-avatar">{userInitial}</span>
           <span>Profile</span>
-        </button>
+        </Link>
       </nav>
     </div>
   );
