@@ -14,6 +14,7 @@ import ListPage from "./pages/ListPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DueItemsPage from "./pages/DueItemsPage";
+import ProfilePage from "./pages/ProfilePage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -129,6 +130,15 @@ function App() {
               <DueItemsPage
                 mode="upcoming"
               />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />
