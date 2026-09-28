@@ -115,6 +115,9 @@ messaging.onBackgroundMessage((payload) => {
       payload.notification?.body ||
       "You have a new notification.",
 
+    icon: "/OddsnSods-icon.png",
+    badge: "/OddsnSods-icon.png",
+
     data: {
       type:
         payload.data?.type || null,
