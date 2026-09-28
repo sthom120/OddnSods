@@ -1,3 +1,7 @@
+import {
+  clearStoredSession,
+} from "./auth";
+
 const API_URL = "http://localhost:3000/api";
 
 export const apiFetch = async (path, options = {}) => {
@@ -17,10 +21,35 @@ export const apiFetch = async (path, options = {}) => {
     headers,
   });
 
-  const data = await response.json();
+  let data = null;
+
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
 
   if (!response.ok) {
-    throw new Error(data.message || "Something went wrong");
+    if (
+      response.status === 401 &&
+      !path.startsWith("/auth/")
+    ) {
+      clearStoredSession();
+
+      if (
+        window.location.pathname !==
+        "/login"
+      ) {
+        window.location.replace(
+          "/login"
+        );
+      }
+    }
+
+    throw new Error(
+      data?.message ||
+        "Something went wrong"
+    );
   }
 
   return data;
