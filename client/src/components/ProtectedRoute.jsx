@@ -1,9 +1,10 @@
 import { Navigate } from "react-router-dom";
+import {
+  hasValidStoredSession,
+} from "../auth";
 
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("token");
-
-  if (!token) {
+  if (!hasValidStoredSession()) {
     return <Navigate to="/login" replace />;
   }
 

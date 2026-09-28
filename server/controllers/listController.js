@@ -270,6 +270,21 @@ const removeMember = async (req, res) => {
 
     await list.save();
 
+    // Keep completed history intact, but remove the
+    // former member from any active work on this list.
+    await Item.updateMany(
+      {
+        listId: list._id,
+        assignedTo: req.params.userId,
+        completed: false,
+      },
+      {
+        $set: {
+          assignedTo: null,
+        },
+      }
+    );
+
     await list.populate("owner", "name email");
     await list.populate("members", "name email");
 

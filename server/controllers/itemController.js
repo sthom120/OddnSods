@@ -5,6 +5,13 @@ const {
   sendAssignmentNotification,
 } = require("../services/notificationService");
 
+const {
+  addRecurrenceToDateKey,
+  dateKeyToDate,
+  getDateKeyFromValue,
+  getTodayDateKey,
+} = require("../utils/dateUtils");
+
 // --------------------------------------------------
 // FIND A LIST THE CURRENT USER CAN ACCESS
 // --------------------------------------------------
@@ -25,67 +32,35 @@ const getAccessibleList = async (listId, userId) => {
 
 const calculateNextOccurrence = (
   dueDate,
+  dueDateKey,
   recurrence
 ) => {
-  if (!dueDate || !recurrence?.frequency) {
+  if (!recurrence?.frequency) {
     return null;
   }
 
-  const nextDate = new Date(dueDate);
+  const currentDateKey =
+    dueDateKey ||
+    getDateKeyFromValue(dueDate);
 
-  switch (recurrence.frequency) {
-    case "daily":
-      nextDate.setUTCDate(
-        nextDate.getUTCDate() + 1
-      );
-      break;
-
-    case "weekly":
-      nextDate.setUTCDate(
-        nextDate.getUTCDate() + 7
-      );
-      break;
-
-    case "fortnightly":
-      nextDate.setUTCDate(
-        nextDate.getUTCDate() + 14
-      );
-      break;
-
-    case "monthly": {
-      const originalDay =
-        nextDate.getUTCDate();
-
-      nextDate.setUTCDate(1);
-
-      nextDate.setUTCMonth(
-        nextDate.getUTCMonth() + 1
-      );
-
-      const lastDayOfMonth =
-        new Date(
-          Date.UTC(
-            nextDate.getUTCFullYear(),
-            nextDate.getUTCMonth() + 1,
-            0
-          )
-        ).getUTCDate();
-
-      nextDate.setUTCDate(
-        Math.min(
-          originalDay,
-          lastDayOfMonth
-        )
-      );
-
-      break;
-    }
-
-    default:
-      return null;
+  if (!currentDateKey) {
+    return null;
   }
 
-  return nextDate;
+  const nextDateKey =
+    addRecurrenceToDateKey(
+      currentDateKey,
+      recurrence.frequency
+    );
+
+  if (!nextDateKey) {
+    return null;
+  }
+
+  return {
+    dateKey: nextDateKey,
+    date: dateKeyToDate(nextDateKey),
+  };
 };
 
 // --------------------------------------------------
@@ -123,9 +98,21 @@ const validateAssignee = (
 
 const generateDueRecurringItems =
   async (listId) => {
-    const now = new Date();
+    const list = await List.findById(
+      listId
+    ).select("owner members");
 
-    const dueRecurringItems =
+    if (!list) {
+      return;
+    }
+
+    // Recurrence is based on calendar dates rather
+    // than UTC timestamps. This prevents a task due
+    // today in Queensland from waiting until 10am.
+    const todayDateKey =
+      getTodayDateKey();
+
+    const recurringCandidates =
       await Item.find({
         listId,
         completed: true,
@@ -136,30 +123,69 @@ const generateDueRecurringItems =
 
         nextOccurrenceCreated: false,
 
-        nextOccurrenceDate: {
-          $ne: null,
-          $lte: now,
-        },
+        $or: [
+          {
+            nextOccurrenceDateKey: {
+              $ne: null,
+            },
+          },
+          {
+            nextOccurrenceDate: {
+              $ne: null,
+            },
+          },
+        ],
       });
 
-    for (const oldItem of dueRecurringItems) {
-      const existingNextItem =
-        await Item.findOne({
-          previousOccurrenceId:
-            oldItem._id,
-        });
+    const dueRecurringItems =
+      recurringCandidates.filter(
+        (item) => {
+          const nextDateKey =
+            item.nextOccurrenceDateKey ||
+            getDateKeyFromValue(
+              item.nextOccurrenceDate
+            );
 
-      if (!existingNextItem) {
+          return (
+            nextDateKey &&
+            nextDateKey <= todayDateKey
+          );
+        }
+      );
+
+    for (const oldItem of dueRecurringItems) {
+      const nextDateKey =
+        oldItem.nextOccurrenceDateKey ||
+        getDateKeyFromValue(
+          oldItem.nextOccurrenceDate
+        );
+
+      if (!nextDateKey) {
+        continue;
+      }
+
+      const copiedAssignee =
+        validateAssignee(
+          list,
+          oldItem.assignedTo
+        )
+          ? oldItem.assignedTo
+          : null;
+
+      try {
         await Item.create({
           listId: oldItem.listId,
 
           title: oldItem.title,
 
           dueDate:
-            oldItem.nextOccurrenceDate,
+            oldItem.nextOccurrenceDate ||
+            dateKeyToDate(nextDateKey),
+
+          dueDateKey: nextDateKey,
 
           assignedTo:
-            oldItem.assignedTo,
+            copiedAssignee,
 
           recurrence:
             oldItem.recurrence,
@@ -170,12 +196,29 @@ const generateDueRecurringItems =
           previousOccurrenceId:
             oldItem._id,
         });
+      } catch (error) {
+        // A unique partial index on
+        // previousOccurrenceId makes simultaneous
+        // list loads safe. If another request made
+        // the occurrence first, there is nothing
+        // else to create here.
+        if (error?.code !== 11000) {
+          throw error;
+        }
       }
 
-      oldItem.nextOccurrenceCreated =
-        true;
-
-      await oldItem.save();
+      await Item.updateOne(
+        {
+          _id: oldItem._id,
+        },
+        {
+          $set: {
+            nextOccurrenceCreated: true,
+            nextOccurrenceDateKey:
+              nextDateKey,
+          },
+        }
+      );
     }
   };
 
@@ -249,7 +292,10 @@ const createItem = async (
       recurrence,
     } = req.body;
 
-    if (!title?.trim()) {
+    if (
+      typeof title !== "string" ||
+      !title.trim()
+    ) {
       return res.status(400).json({
         message:
           "Item title is required",
@@ -290,6 +336,9 @@ const createItem = async (
       });
     }
 
+    const dueDateKey =
+      getDateKeyFromValue(dueDate);
+
     const item = await Item.create({
       listId,
 
@@ -297,6 +346,8 @@ const createItem = async (
 
       dueDate:
         dueDate || null,
+
+      dueDateKey,
 
       assignedTo:
         assignedTo || null,
@@ -371,9 +422,6 @@ const updateItem = async (
       });
     }
 
-    // Store this BEFORE changing the item.
-    // We use it to determine whether
-    // assignment actually changed.
     const previousAssignedTo =
       item.assignedTo
         ? item.assignedTo.toString()
@@ -400,7 +448,11 @@ const updateItem = async (
     if (
       req.body.title !== undefined
     ) {
-      if (!req.body.title.trim()) {
+      if (
+        typeof req.body.title !==
+          "string" ||
+        !req.body.title.trim()
+      ) {
         return res.status(400).json({
           message:
             "Item title cannot be empty",
@@ -420,6 +472,11 @@ const updateItem = async (
     ) {
       updateData.dueDate =
         req.body.dueDate || null;
+
+      updateData.dueDateKey =
+        getDateKeyFromValue(
+          req.body.dueDate
+        );
     }
 
     // -------------------------------
@@ -463,6 +520,14 @@ const updateItem = async (
         ? updateData.dueDate
         : item.dueDate;
 
+    const effectiveDueDateKey =
+      updateData.dueDateKey !== undefined
+        ? updateData.dueDateKey
+        : item.dueDateKey ||
+          getDateKeyFromValue(
+            item.dueDate
+          );
+
     const effectiveRecurrence =
       updateData.recurrence !== undefined
         ? updateData.recurrence
@@ -478,10 +543,9 @@ const updateItem = async (
       });
     }
 
-    // If a completed recurring item
-    // is edited before its next copy
-    // has been created, recalculate
-    // the future occurrence date.
+    // If a completed recurring item is edited
+    // before its next copy has been created,
+    // recalculate its next calendar occurrence.
     if (
       item.completed &&
       !item.nextOccurrenceCreated &&
@@ -490,11 +554,18 @@ const updateItem = async (
         req.body.recurrence !== undefined
       )
     ) {
-      updateData.nextOccurrenceDate =
+      const nextOccurrence =
         calculateNextOccurrence(
           effectiveDueDate,
+          effectiveDueDateKey,
           effectiveRecurrence
         );
+
+      updateData.nextOccurrenceDate =
+        nextOccurrence?.date || null;
+
+      updateData.nextOccurrenceDateKey =
+        nextOccurrence?.dateKey || null;
 
       updateData.nextOccurrenceCreated =
         false;
@@ -507,6 +578,13 @@ const updateItem = async (
     if (
       req.body.completed === true
     ) {
+      const nextOccurrence =
+        calculateNextOccurrence(
+          effectiveDueDate,
+          effectiveDueDateKey,
+          effectiveRecurrence
+        );
+
       updateData.completed = true;
 
       updateData.completedAt =
@@ -516,10 +594,10 @@ const updateItem = async (
         req.user._id;
 
       updateData.nextOccurrenceDate =
-        calculateNextOccurrence(
-          effectiveDueDate,
-          effectiveRecurrence
-        );
+        nextOccurrence?.date || null;
+
+      updateData.nextOccurrenceDateKey =
+        nextOccurrence?.dateKey || null;
 
       updateData.nextOccurrenceCreated =
         false;
@@ -545,6 +623,8 @@ const updateItem = async (
       updateData.completedAt = null;
       updateData.completedBy = null;
       updateData.nextOccurrenceDate =
+        null;
+      updateData.nextOccurrenceDateKey =
         null;
       updateData.nextOccurrenceCreated =
         false;

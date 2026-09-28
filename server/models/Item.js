@@ -53,6 +53,12 @@ const itemSchema = new mongoose.Schema(
       default: null,
     },
 
+    dueDateKey: {
+      type: String,
+      default: null,
+      match: /^\d{4}-\d{2}-\d{2}$/,
+    },
+
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -75,6 +81,12 @@ const itemSchema = new mongoose.Schema(
       default: null,
     },
 
+    nextOccurrenceDateKey: {
+      type: String,
+      default: null,
+      match: /^\d{4}-\d{2}-\d{2}$/,
+    },
+
     nextOccurrenceCreated: {
       type: Boolean,
       default: false,
@@ -88,6 +100,20 @@ const itemSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+  }
+);
+
+itemSchema.index(
+  {
+    previousOccurrenceId: 1,
+  },
+  {
+    unique: true,
+    partialFilterExpression: {
+      previousOccurrenceId: {
+        $type: "objectId",
+      },
+    },
   }
 );
 
