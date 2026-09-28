@@ -203,7 +203,12 @@ const updateList = async (req, res) => {
       });
     }
 
-    res.json(list);
+    res.json(
+      formatListForViewer(
+        list,
+        req.user._id
+      )
+    );
   } catch (error) {
     res.status(400).json({
       message: error.message,
@@ -294,7 +299,12 @@ const shareList = async (req, res) => {
     await list.populate("owner", "name email");
     await list.populate("members", "name email");
 
-    res.json(list);
+    res.json(
+      formatListForViewer(
+        list,
+        req.user._id
+      )
+    );
   } catch (error) {
     res.status(400).json({
       message: error.message,
@@ -338,7 +348,12 @@ const removeMember = async (req, res) => {
     await list.populate("owner", "name email");
     await list.populate("members", "name email");
 
-    res.json(list);
+    res.json(
+      formatListForViewer(
+        list,
+        req.user._id
+      )
+    );
   } catch (error) {
     res.status(400).json({
       message: error.message,
