@@ -12,6 +12,10 @@ function DueItemsPage({ mode }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] =
     useState(true);
+  const [error, setError] =
+    useState("");
+  const [actionError, setActionError] =
+    useState("");
 
   const navigate = useNavigate();
 
@@ -29,6 +33,8 @@ function DueItemsPage({ mode }) {
   const fetchItems = async () => {
     try {
       setLoading(true);
+      setError("");
+      setActionError("");
 
       const data = await apiFetch(
         "/items/overview"
@@ -39,6 +45,10 @@ function DueItemsPage({ mode }) {
       console.error(
         "Failed to fetch due items:",
         error
+      );
+
+      setError(
+        "We couldn't load these items. Please try again."
       );
     } finally {
       setLoading(false);
@@ -115,6 +125,8 @@ function DueItemsPage({ mode }) {
   };
 
   const completeItem = async (item) => {
+    setActionError("");
+
     try {
       await apiFetch(
         `/items/${item._id}`,
@@ -137,6 +149,8 @@ function DueItemsPage({ mode }) {
         "Failed to complete item:",
         error
       );
+
+      setActionError(error.message);
     }
   };
 
@@ -315,9 +329,29 @@ function DueItemsPage({ mode }) {
           </p>
         </header>
 
+        {actionError && (
+          <div className="auth-error">
+            {actionError}
+          </div>
+        )}
+
         {loading ? (
           <div className="overview-empty">
             Loading...
+          </div>
+        ) : error ? (
+          <div className="overview-empty">
+            <h3>Couldn't load these items</h3>
+
+            <p>{error}</p>
+
+            <button
+              type="button"
+              className="primary-button"
+              onClick={fetchItems}
+            >
+              Try again
+            </button>
           </div>
         ) : mode === "today" ? (
           <>
