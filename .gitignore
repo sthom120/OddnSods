@@ -1,7 +1,23 @@
+# Dependencies
 node_modules/
-.env
 client/node_modules/
 server/node_modules/
-server/.env
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
 client/.env
+server/.env
 server/config/firebase-service-account.json
+
+# Build and test output
+dist/
+coverage/
+*.log
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
