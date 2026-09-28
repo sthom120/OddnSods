@@ -6,36 +6,63 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const listRoutes = require("./routes/listRoutes");
 const itemRoutes = require("./routes/itemRoutes");
-
 const notificationRoutes = require(
   "./routes/notificationRoutes"
 );
 
 const app = express();
 
-connectDB();
+const configuredOrigins = (
+  process.env.CLIENT_ORIGINS ||
+  "http://localhost:5173"
+)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-app.use(cors());
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (
+        !origin ||
+        configuredOrigins.includes(origin)
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error("Origin not allowed by CORS")
+      );
+    },
+  })
+);
+
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.json({
+    message: "OddsnSods API is running",
+  });
+});
+
+app.use("/api/auth", authRoutes);
+app.use("/api/lists", listRoutes);
+app.use("/api/items", itemRoutes);
 app.use(
   "/api/notifications",
   notificationRoutes
 );
 
-app.get("/", (req, res) => {
-  res.json({ message: "List app API is running" });
-});
-
-app.get("/api/test", (req, res) => {
-  res.json({ message: "Test route works" });
-});
-
-app.use("/api/lists", listRoutes);
-app.use("/api/items", itemRoutes);
-app.use("/api/auth", authRoutes);
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const startServer = async () => {
+  await connectDB();
+
+  app.listen(PORT, () => {
+    console.log(
+      `Server running on port ${PORT}`
+    );
+  });
+};
+
+startServer();
