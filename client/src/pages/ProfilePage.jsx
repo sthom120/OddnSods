@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   enableNotifications,
   unregisterNotifications,
 } from "../notifications";
+import {
+  getPwaInstallState,
+  promptPwaInstall,
+} from "../pwa";
 import "../ProfilePage.css";
 
 function NavIcon({ type }) {
@@ -54,10 +58,36 @@ function ProfilePage() {
   const [notificationPermission, setNotificationPermission] = useState(
     getNotificationPermission
   );
+  const [installState, setInstallState] = useState(getPwaInstallState);
+  const [installMessage, setInstallMessage] = useState("");
 
   const storedUser = localStorage.getItem("user");
   const currentUser = storedUser ? JSON.parse(storedUser) : null;
   const userInitial = currentUser?.name?.charAt(0).toUpperCase() || "U";
+
+  useEffect(() => {
+    const updateInstallState = () => {
+      setInstallState(getPwaInstallState());
+    };
+
+    window.addEventListener(
+      "oddsnsods-install-state-change",
+      updateInstallState
+    );
+
+    const displayMode = window.matchMedia?.("(display-mode: standalone)");
+    displayMode?.addEventListener?.("change", updateInstallState);
+
+    updateInstallState();
+
+    return () => {
+      window.removeEventListener(
+        "oddsnsods-install-state-change",
+        updateInstallState
+      );
+      displayMode?.removeEventListener?.("change", updateInstallState);
+    };
+  }, []);
 
   const turnOnNotifications = async () => {
     setNotificationMessage("");
@@ -65,6 +95,26 @@ function ProfilePage() {
     setNotificationPermission(getNotificationPermission());
     setNotificationMessage(
       result.success ? "Notifications are ready on this browser." : result.message
+    );
+  };
+
+  const installApp = async () => {
+    setInstallMessage("");
+    const result = await promptPwaInstall();
+    setInstallState(getPwaInstallState());
+
+    if (result.success) {
+      setInstallMessage("OddsnSods was added to this device.");
+      return;
+    }
+
+    if (result.outcome === "dismissed") {
+      setInstallMessage("Install cancelled. You can try again any time.");
+      return;
+    }
+
+    setInstallMessage(
+      "Use your browser's Install app or Add to Home Screen option on this device."
     );
   };
 
@@ -98,6 +148,12 @@ function ProfilePage() {
 
     return { label: "Not enabled", className: "off" };
   })();
+
+  const installStatus = installState.installed
+    ? { label: "Installed", className: "on" }
+    : installState.canPrompt
+      ? { label: "Ready", className: "on" }
+      : { label: "Available", className: "off" };
 
   return (
     <div className="dashboard-layout concept-one-dashboard profile-dashboard">
@@ -211,6 +267,59 @@ function ProfilePage() {
 
           {notificationMessage && (
             <p className="profile-feedback">{notificationMessage}</p>
+          )}
+        </section>
+
+        <section className="profile-section" aria-labelledby="install-heading">
+          <div className="profile-section-heading">
+            <div>
+              <h2 id="install-heading">App</h2>
+              <p>Install OddsnSods for quicker access from this device.</p>
+            </div>
+            <span className={`profile-status-pill ${installStatus.className}`}>
+              {installStatus.label}
+            </span>
+          </div>
+
+          <div className="profile-setting-row">
+            <div className="profile-setting-icon" aria-hidden="true">↧</div>
+            <div className="profile-setting-copy">
+              <strong>Install OddsnSods</strong>
+              <span>
+                Open OddsnSods from your home screen or app menu like a regular app.
+              </span>
+            </div>
+            {installState.canPrompt && !installState.installed && (
+              <button
+                type="button"
+                className="profile-setting-button"
+                onClick={installApp}
+              >
+                Install
+              </button>
+            )}
+          </div>
+
+          {installState.installed && (
+            <p className="profile-feedback">
+              OddsnSods is installed on this device.
+            </p>
+          )}
+
+          {!installState.installed && installState.ios && (
+            <p className="profile-help-text">
+              On iPhone or iPad, open the browser Share menu and choose Add to Home Screen.
+            </p>
+          )}
+
+          {!installState.installed && !installState.canPrompt && !installState.ios && (
+            <p className="profile-help-text">
+              If your browser supports app installation, use its Install app or Add to Home Screen option.
+            </p>
+          )}
+
+          {installMessage && (
+            <p className="profile-feedback">{installMessage}</p>
           )}
         </section>
 
