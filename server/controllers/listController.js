@@ -2,6 +2,46 @@ const Item = require("../models/Item");
 const List = require("../models/List");
 const User = require("../models/User");
 
+const formatListForViewer = (
+  list,
+  viewerId
+) => {
+  const plainList = list.toObject();
+
+  const ownerId =
+    plainList.owner?._id?.toString?.() ||
+    plainList.owner?.toString?.();
+
+  const viewerIsOwner =
+    ownerId === viewerId.toString();
+
+  if (!viewerIsOwner) {
+    if (
+      plainList.owner &&
+      typeof plainList.owner === "object"
+    ) {
+      delete plainList.owner.email;
+    }
+
+    if (Array.isArray(plainList.members)) {
+      plainList.members =
+        plainList.members.map(
+          (member) => {
+            const cleanMember = {
+              ...member,
+            };
+
+            delete cleanMember.email;
+
+            return cleanMember;
+          }
+        );
+    }
+  }
+
+  return plainList;
+};
+
 const getLists = async (req, res) => {
   try {
     const lists = await List.find({
@@ -14,7 +54,14 @@ const getLists = async (req, res) => {
       .populate("members", "name email")
       .sort({ createdAt: -1 });
 
-    res.json(lists);
+    res.json(
+      lists.map((list) =>
+        formatListForViewer(
+          list,
+          req.user._id
+        )
+      )
+    );
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -40,7 +87,12 @@ const getListById = async (req, res) => {
       });
     }
 
-    res.json(list);
+    res.json(
+      formatListForViewer(
+        list,
+        req.user._id
+      )
+    );
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -151,7 +203,12 @@ const updateList = async (req, res) => {
       });
     }
 
-    res.json(list);
+    res.json(
+      formatListForViewer(
+        list,
+        req.user._id
+      )
+    );
   } catch (error) {
     res.status(400).json({
       message: error.message,
@@ -242,7 +299,12 @@ const shareList = async (req, res) => {
     await list.populate("owner", "name email");
     await list.populate("members", "name email");
 
-    res.json(list);
+    res.json(
+      formatListForViewer(
+        list,
+        req.user._id
+      )
+    );
   } catch (error) {
     res.status(400).json({
       message: error.message,
@@ -270,8 +332,6 @@ const removeMember = async (req, res) => {
 
     await list.save();
 
-    // Keep completed history intact, but remove the
-    // former member from any active work on this list.
     await Item.updateMany(
       {
         listId: list._id,
@@ -288,7 +348,12 @@ const removeMember = async (req, res) => {
     await list.populate("owner", "name email");
     await list.populate("members", "name email");
 
-    res.json(list);
+    res.json(
+      formatListForViewer(
+        list,
+        req.user._id
+      )
+    );
   } catch (error) {
     res.status(400).json({
       message: error.message,

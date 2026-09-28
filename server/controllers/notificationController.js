@@ -2,10 +2,6 @@ const User = require(
   "../models/User"
 );
 
-const messaging = require(
-  "../config/firebaseAdmin"
-);
-
 // ------------------------------------
 // REGISTER THIS BROWSER TO THIS USER
 // ------------------------------------
@@ -27,10 +23,6 @@ const registerInstallation =
           });
       }
 
-      /*
-        If Firebase has rotated this browser's FID,
-        remove the old one from the current account.
-      */
       if (
         previousFid &&
         previousFid !== fid
@@ -49,10 +41,6 @@ const registerInstallation =
         );
       }
 
-      /*
-        A browser installation should only belong
-        to one logged-in OddsnSods account at a time.
-      */
       await User.updateMany(
         {
           _id: {
@@ -94,20 +82,14 @@ const registerInstallation =
               fid
           );
 
-      if (
-        existingInstallation
-      ) {
-        existingInstallation
-          .updatedAt =
+      if (existingInstallation) {
+        existingInstallation.updatedAt =
           new Date();
       } else {
-        user
-          .notificationInstallations
-          .push({
-            fid,
-            updatedAt:
-              new Date(),
-          });
+        user.notificationInstallations.push({
+          fid,
+          updatedAt: new Date(),
+        });
       }
 
       await user.save();
@@ -127,8 +109,7 @@ const registerInstallation =
       );
 
       res.status(500).json({
-        message:
-          error.message,
+        message: error.message,
       });
     }
   };
@@ -175,94 +156,7 @@ const unregisterInstallation =
       );
 
       res.status(500).json({
-        message:
-          error.message,
-      });
-    }
-  };
-
-// ------------------------------------
-// TEMPORARY TEST NOTIFICATION
-// ------------------------------------
-
-const sendTestNotification =
-  async (req, res) => {
-    try {
-      const user =
-        await User.findById(
-          req.user._id
-        );
-
-      if (!user) {
-        return res
-          .status(404)
-          .json({
-            message:
-              "User not found",
-          });
-      }
-
-      if (
-        !user
-          .notificationInstallations
-          ?.length
-      ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "No notification installation registered",
-          });
-      }
-
-      const results = [];
-
-      for (
-        const installation of
-        user
-          .notificationInstallations
-      ) {
-        try {
-          const response =
-            await messaging.send({
-              fid:
-                installation.fid,
-
-              notification: {
-                title:
-                  "OddsnSods",
-
-                body:
-                  "Notifications are working 🎉",
-              },
-
-              data: {
-                type: "test",
-              },
-            });
-
-          results.push({
-            success: true,
-            response,
-          });
-        } catch (error) {
-          results.push({
-            success: false,
-            error:
-              error.message,
-          });
-        }
-      }
-
-      res.json({
-        message:
-          "Test notification attempted",
-        results,
-      });
-    } catch (error) {
-      res.status(500).json({
-        message:
-          error.message,
+        message: error.message,
       });
     }
   };
@@ -270,5 +164,4 @@ const sendTestNotification =
 module.exports = {
   registerInstallation,
   unregisterInstallation,
-  sendTestNotification,
 };

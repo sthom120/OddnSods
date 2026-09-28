@@ -7,6 +7,10 @@ function ListPage() {
 
   const [list, setList] = useState(null);
   const [items, setItems] = useState([]);
+  const [loadingPage, setLoadingPage] = useState(true);
+  const [pageError, setPageError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   // New item
   const [newItemTitle, setNewItemTitle] = useState("");
@@ -46,52 +50,66 @@ function ListPage() {
     list?.owner === currentUser?.id;
 
   useEffect(() => {
-    fetchList();
-    fetchItems();
-  }, [id]);
+    let cancelled = false;
 
-  // --------------------------------
-  // LOAD LIST
-  // --------------------------------
+    const loadPage = async () => {
+      setLoadingPage(true);
+      setPageError("");
+      setActionError("");
 
-  const fetchList = async () => {
-    try {
-      const data = await apiFetch(`/lists/${id}`);
+      try {
+        const [listData, itemData] =
+          await Promise.all([
+            apiFetch(`/lists/${id}`),
+            apiFetch(`/items/list/${id}`),
+          ]);
 
-      setList(data);
+        if (cancelled) return;
 
-      const savedShowCompleted =
-        localStorage.getItem(`showCompleted-${id}`);
+        setList(listData);
+        setItems(itemData);
 
-      if (savedShowCompleted !== null) {
-        setShowCompleted(savedShowCompleted === "true");
-      } else {
-        setShowCompleted(
-          data.settings?.showCompleted ?? true
+        const savedShowCompleted =
+          localStorage.getItem(
+            `showCompleted-${id}`
+          );
+
+        if (savedShowCompleted !== null) {
+          setShowCompleted(
+            savedShowCompleted === "true"
+          );
+        } else {
+          setShowCompleted(
+            listData.settings
+              ?.showCompleted ?? true
+          );
+        }
+      } catch (error) {
+        if (cancelled) return;
+
+        console.error(
+          "Failed to load list page:",
+          error
         );
+
+        setPageError(
+          error.message === "List not found"
+            ? "This list isn't available to this account. It may have been deleted or unshared."
+            : "We couldn't load this list. Please try again."
+        );
+      } finally {
+        if (!cancelled) {
+          setLoadingPage(false);
+        }
       }
-    } catch (error) {
-      console.error(
-        "Failed to fetch list:",
-        error
-      );
-    }
-  };
+    };
 
-  const fetchItems = async () => {
-    try {
-      const data = await apiFetch(
-        `/items/list/${id}`
-      );
+    loadPage();
 
-      setItems(data);
-    } catch (error) {
-      console.error(
-        "Failed to fetch items:",
-        error
-      );
-    }
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, [id, reloadKey]);
 
   // --------------------------------
   // LIST SETTINGS
@@ -101,6 +119,8 @@ function ListPage() {
     settingName,
     value
   ) => {
+    setActionError("");
+
     try {
       const updatedList = await apiFetch(
         `/lists/${id}`,
@@ -136,6 +156,8 @@ function ListPage() {
         "Failed to update list setting:",
         error
       );
+
+      setActionError(error.message);
     }
   };
 
@@ -147,6 +169,7 @@ function ListPage() {
     e.preventDefault();
 
     setNewItemError("");
+    setActionError("");
 
     if (!newItemTitle.trim()) return;
 
@@ -210,6 +233,8 @@ function ListPage() {
   // --------------------------------
 
   const toggleItem = async (item) => {
+    setActionError("");
+
     try {
       const updatedItem = await apiFetch(
         `/items/${item._id}`,
@@ -233,6 +258,8 @@ function ListPage() {
         "Failed to update item:",
         error
       );
+
+      setActionError(error.message);
     }
   };
 
@@ -241,6 +268,7 @@ function ListPage() {
   // --------------------------------
 
   const startEditingItem = (item) => {
+    setActionError("");
     setEditingItemId(item._id);
     setEditingTitle(item.title);
 
@@ -263,6 +291,7 @@ function ListPage() {
 
   const saveItemEdit = async (itemId) => {
     setEditingError("");
+    setActionError("");
 
     if (!editingTitle.trim()) return;
 
@@ -282,14 +311,6 @@ function ListPage() {
       const updateData = {
         title: editingTitle.trim(),
       };
-
-      /*
-        Only update optional fields when that feature
-        is enabled.
-
-        This means turning assignment/due dates off
-        for a list does not silently erase old data.
-      */
 
       if (list.settings?.assignmentEnabled) {
         updateData.assignedTo =
@@ -350,6 +371,8 @@ function ListPage() {
 
     if (!confirmed) return;
 
+    setActionError("");
+
     try {
       await apiFetch(`/items/${itemId}`, {
         method: "DELETE",
@@ -365,6 +388,8 @@ function ListPage() {
         "Failed to delete item:",
         error
       );
+
+      setActionError(error.message);
     }
   };
 
@@ -425,11 +450,13 @@ function ListPage() {
       );
 
       setList(updatedList);
-    } catch (error) {
-      console.error(
-        "Failed to remove member:",
-        error
+      setShareStatus("success");
+      setShareMessage(
+        "Access removed."
       );
+    } catch (error) {
+      setShareStatus("error");
+      setShareMessage(error.message);
     }
   };
 
@@ -498,13 +525,47 @@ function ListPage() {
   };
 
   // --------------------------------
-  // LOADING
+  // LOADING / ERROR
   // --------------------------------
 
-  if (!list) {
+  if (loadingPage) {
     return (
       <main className="list-page-shell">
         <p>Loading...</p>
+      </main>
+    );
+  }
+
+  if (pageError || !list) {
+    return (
+      <main className="list-page-shell">
+        <Link
+          to="/"
+          className="list-back-link"
+        >
+          ← My Lists
+        </Link>
+
+        <div className="list-empty-items">
+          <h2>Couldn't load this list</h2>
+
+          <p>
+            {pageError ||
+              "This list isn't available."}
+          </p>
+
+          <button
+            type="button"
+            className="primary-modern-button"
+            onClick={() =>
+              setReloadKey(
+                (current) => current + 1
+              )
+            }
+          >
+            Try again
+          </button>
+        </div>
       </main>
     );
   }
@@ -575,6 +636,12 @@ function ListPage() {
           )}
         </div>
       </div>
+
+      {actionError && (
+        <p className="form-error-message">
+          {actionError}
+        </p>
+      )}
 
       {/* LIST HEADER */}
 
@@ -820,8 +887,6 @@ function ListPage() {
               >
                 {editingItemId ===
                 item._id ? (
-                  /* EDIT ITEM */
-
                   <div className="modern-edit-form">
                     <label>
                       Item
@@ -966,8 +1031,6 @@ function ListPage() {
                     </div>
                   </div>
                 ) : (
-                  /* NORMAL ITEM */
-
                   <>
                     <label className="task-check-area">
                       <input
@@ -1171,9 +1234,11 @@ function ListPage() {
                       {list.owner?.name}
                     </strong>
 
-                    <span>
-                      {list.owner?.email}
-                    </span>
+                    {list.owner?.email && (
+                      <span>
+                        {list.owner.email}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -1200,9 +1265,11 @@ function ListPage() {
                           {member.name}
                         </strong>
 
-                        <span>
-                          {member.email}
-                        </span>
+                        {member.email && (
+                          <span>
+                            {member.email}
+                          </span>
+                        )}
                       </div>
                     </div>
 

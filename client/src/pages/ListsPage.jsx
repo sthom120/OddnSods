@@ -9,12 +9,21 @@ import {
 
 function ListsPage() {
   const [lists, setLists] = useState([]);
+  const [loadingLists, setLoadingLists] = useState(true);
+  const [listsError, setListsError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [newListName, setNewListName] = useState("");
   const [editingListId, setEditingListId] = useState(null);
   const [editingName, setEditingName] = useState("");
   const [showNewListForm, setShowNewListForm] = useState(false);
   const [notificationMessage, setNotificationMessage] =
     useState("");
+
+  const navigate = useNavigate();
+
+  const currentUser = JSON.parse(
+    localStorage.getItem("user")
+  );
 
   const turnOnNotifications = async () => {
     setNotificationMessage("");
@@ -32,23 +41,29 @@ function ListsPage() {
     }
   };
 
-  const navigate = useNavigate();
-
-  const currentUser = JSON.parse(
-    localStorage.getItem("user")
-  );
-
   useEffect(() => {
     fetchLists();
     syncNotificationsIfAllowed();
   }, []);
 
   const fetchLists = async () => {
+    setLoadingLists(true);
+    setListsError("");
+
     try {
       const data = await apiFetch("/lists");
       setLists(data);
     } catch (error) {
-      console.error("Failed to fetch lists:", error);
+      console.error(
+        "Failed to fetch lists:",
+        error
+      );
+
+      setListsError(
+        "We couldn't load your lists. Please try again."
+      );
+    } finally {
+      setLoadingLists(false);
     }
   };
 
@@ -56,6 +71,8 @@ function ListsPage() {
     e.preventDefault();
 
     if (!newListName.trim()) return;
+
+    setActionError("");
 
     try {
       const newList = await apiFetch("/lists", {
@@ -69,17 +86,20 @@ function ListsPage() {
       setNewListName("");
       setShowNewListForm(false);
     } catch (error) {
-      console.error("Failed to create list:", error);
+      setActionError(error.message);
     }
   };
 
   const startEditing = (list) => {
+    setActionError("");
     setEditingListId(list._id);
     setEditingName(list.name);
   };
 
   const saveListName = async (listId) => {
     if (!editingName.trim()) return;
+
+    setActionError("");
 
     try {
       const updatedList = await apiFetch(
@@ -103,7 +123,7 @@ function ListsPage() {
       setEditingListId(null);
       setEditingName("");
     } catch (error) {
-      console.error("Failed to update list:", error);
+      setActionError(error.message);
     }
   };
 
@@ -114,6 +134,8 @@ function ListsPage() {
 
     if (!confirmed) return;
 
+    setActionError("");
+
     try {
       await apiFetch(`/lists/${listId}`, {
         method: "DELETE",
@@ -123,7 +145,7 @@ function ListsPage() {
         current.filter((list) => list._id !== listId)
       );
     } catch (error) {
-      console.error("Failed to delete list:", error);
+      setActionError(error.message);
     }
   };
 
@@ -253,13 +275,20 @@ function ListsPage() {
 
           <button
             className="primary-button"
-            onClick={() =>
-              setShowNewListForm(true)
-            }
+            onClick={() => {
+              setActionError("");
+              setShowNewListForm(true);
+            }}
           >
             + New list
           </button>
         </header>
+
+        {actionError && (
+          <div className="auth-error">
+            {actionError}
+          </div>
+        )}
 
         {showNewListForm && (
           <section className="new-list-panel">
@@ -298,6 +327,7 @@ function ListsPage() {
                 onClick={() => {
                   setShowNewListForm(false);
                   setNewListName("");
+                  setActionError("");
                 }}
               >
                 Cancel
@@ -306,7 +336,25 @@ function ListsPage() {
           </section>
         )}
 
-        {lists.length === 0 ? (
+        {loadingLists ? (
+          <section className="empty-state">
+            <h2>Loading your lists...</h2>
+          </section>
+        ) : listsError ? (
+          <section className="empty-state">
+            <h2>Couldn't load your lists</h2>
+
+            <p>{listsError}</p>
+
+            <button
+              className="primary-button"
+              type="button"
+              onClick={fetchLists}
+            >
+              Try again
+            </button>
+          </section>
+        ) : lists.length === 0 ? (
           <section className="empty-state">
             <div className="empty-icon">✓</div>
 
@@ -365,6 +413,7 @@ function ListsPage() {
                           onClick={() => {
                             setEditingListId(null);
                             setEditingName("");
+                            setActionError("");
                           }}
                         >
                           Cancel
@@ -447,9 +496,10 @@ function ListsPage() {
 
             <button
               className="create-list-card"
-              onClick={() =>
-                setShowNewListForm(true)
-              }
+              onClick={() => {
+                setActionError("");
+                setShowNewListForm(true);
+              }}
             >
               <span className="create-list-plus">
                 +

@@ -3,7 +3,6 @@ const express = require("express");
 const {
   registerInstallation,
   unregisterInstallation,
-  sendTestNotification,
 } = require(
   "../controllers/notificationController"
 );
@@ -24,11 +23,6 @@ router.post(
 router.delete(
   "/unregister",
   unregisterInstallation
-);
-
-router.post(
-  "/test",
-  sendTestNotification
 );
 
 module.exports = router;

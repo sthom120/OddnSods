@@ -2,7 +2,10 @@ import {
   clearStoredSession,
 } from "./auth";
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = (
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:3000/api"
+).replace(/\/$/, "");
 
 export const apiFetch = async (path, options = {}) => {
   const token = localStorage.getItem("token");
@@ -21,7 +24,7 @@ export const apiFetch = async (path, options = {}) => {
     headers,
   });
 
-  let data = null;
+  let data;
 
   try {
     data = await response.json();
