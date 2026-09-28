@@ -13,7 +13,10 @@ const messaging = require(
 const registerInstallation =
   async (req, res) => {
     try {
-      const { fid } = req.body;
+      const {
+        fid,
+        previousFid,
+      } = req.body;
 
       if (!fid) {
         return res
@@ -24,6 +27,32 @@ const registerInstallation =
           });
       }
 
+      /*
+        If Firebase has rotated this browser's FID,
+        remove the old one from the current account.
+      */
+      if (
+        previousFid &&
+        previousFid !== fid
+      ) {
+        await User.updateOne(
+          {
+            _id: req.user._id,
+          },
+          {
+            $pull: {
+              notificationInstallations: {
+                fid: previousFid,
+              },
+            },
+          }
+        );
+      }
+
+      /*
+        A browser installation should only belong
+        to one logged-in OddsnSods account at a time.
+      */
       await User.updateMany(
         {
           _id: {
