@@ -13,7 +13,10 @@ const messaging = require(
 const registerInstallation =
   async (req, res) => {
     try {
-      const { fid } = req.body;
+      const {
+        fid,
+        previousFid,
+      } = req.body;
 
       if (!fid) {
         return res
@@ -25,14 +28,31 @@ const registerInstallation =
       }
 
       /*
-        One browser installation should
-        belong to the currently logged-in
-        OddsnSods account.
-
-        Remove this FID from any other
-        users before attaching it here.
+        If Firebase has rotated this browser's FID,
+        remove the old one from the current account.
       */
+      if (
+        previousFid &&
+        previousFid !== fid
+      ) {
+        await User.updateOne(
+          {
+            _id: req.user._id,
+          },
+          {
+            $pull: {
+              notificationInstallations: {
+                fid: previousFid,
+              },
+            },
+          }
+        );
+      }
 
+      /*
+        A browser installation should only belong
+        to one logged-in OddsnSods account at a time.
+      */
       await User.updateMany(
         {
           _id: {
@@ -103,6 +123,54 @@ const registerInstallation =
     } catch (error) {
       console.error(
         "Notification registration failed:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          error.message,
+      });
+    }
+  };
+
+// ------------------------------------
+// UNREGISTER THIS BROWSER FROM USER
+// ------------------------------------
+
+const unregisterInstallation =
+  async (req, res) => {
+    try {
+      const { fid } = req.body;
+
+      if (!fid) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Firebase installation ID is required",
+          });
+      }
+
+      await User.updateOne(
+        {
+          _id: req.user._id,
+        },
+        {
+          $pull: {
+            notificationInstallations: {
+              fid,
+            },
+          },
+        }
+      );
+
+      res.json({
+        message:
+          "Notifications unregistered",
+      });
+    } catch (error) {
+      console.error(
+        "Notification unregister failed:",
         error
       );
 
@@ -201,5 +269,6 @@ const sendTestNotification =
 
 module.exports = {
   registerInstallation,
+  unregisterInstallation,
   sendTestNotification,
 };

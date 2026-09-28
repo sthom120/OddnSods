@@ -4,6 +4,9 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { apiFetch } from "../api";
+import {
+  unregisterNotifications,
+} from "../notifications";
 
 function DueItemsPage({ mode }) {
   const [items, setItems] = useState([]);
@@ -42,7 +45,17 @@ function DueItemsPage({ mode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const result =
+      await unregisterNotifications();
+
+    if (!result.success) {
+      console.warn(
+        "Could not unregister notifications before logout:",
+        result.message
+      );
+    }
+
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 

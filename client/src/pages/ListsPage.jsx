@@ -4,6 +4,7 @@ import { apiFetch } from "../api";
 import {
   enableNotifications,
   syncNotificationsIfAllowed,
+  unregisterNotifications,
 } from "../notifications";
 
 function ListsPage() {
@@ -13,14 +14,12 @@ function ListsPage() {
   const [editingName, setEditingName] = useState("");
   const [showNewListForm, setShowNewListForm] = useState(false);
   const [notificationMessage, setNotificationMessage] =
-  useState("");
+    useState("");
 
-  const turnOnNotifications =
-  async () => {
+  const turnOnNotifications = async () => {
     setNotificationMessage("");
 
-    const result =
-      await enableNotifications();
+    const result = await enableNotifications();
 
     if (result.success) {
       setNotificationMessage(
@@ -40,10 +39,9 @@ function ListsPage() {
   );
 
   useEffect(() => {
-  fetchLists();
-
-  syncNotificationsIfAllowed();
-}, []);
+    fetchLists();
+    syncNotificationsIfAllowed();
+  }, []);
 
   const fetchLists = async () => {
     try {
@@ -129,7 +127,17 @@ function ListsPage() {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const result =
+      await unregisterNotifications();
+
+    if (!result.success) {
+      console.warn(
+        "Could not unregister notifications before logout:",
+        result.message
+      );
+    }
+
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");
@@ -152,40 +160,39 @@ function ListsPage() {
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">✓</div>
-
           <span>OddsnSods</span>
         </div>
 
         <nav className="sidebar-nav">
-  <Link
-    to="/"
-    className="nav-item active"
-  >
-    <span>☰</span>
-    My Lists
-  </Link>
+          <Link
+            to="/"
+            className="nav-item active"
+          >
+            <span>☰</span>
+            My Lists
+          </Link>
 
-  <Link
-    to="/today"
-    className="nav-item"
-  >
-    <span>○</span>
-    Today
-  </Link>
+          <Link
+            to="/today"
+            className="nav-item"
+          >
+            <span>○</span>
+            Today
+          </Link>
 
-  <Link
-    to="/upcoming"
-    className="nav-item"
-  >
-    <span>◷</span>
-    Upcoming
-  </Link>
+          <Link
+            to="/upcoming"
+            className="nav-item"
+          >
+            <span>◷</span>
+            Upcoming
+          </Link>
 
-  <button className="nav-item disabled">
-    <span>✓</span>
-    Completed
-  </button>
-</nav>
+          <button className="nav-item disabled">
+            <span>✓</span>
+            Completed
+          </button>
+        </nav>
 
         <div className="sidebar-bottom">
           <div className="user-card">
@@ -212,19 +219,20 @@ function ListsPage() {
           >
             Log out
           </button>
-          <button
-  type="button"
-  className="logout-button"
-  onClick={turnOnNotifications}
->
-  Enable notifications
-</button>
 
-{notificationMessage && (
-  <small>
-    {notificationMessage}
-  </small>
-)}
+          <button
+            type="button"
+            className="logout-button"
+            onClick={turnOnNotifications}
+          >
+            Enable notifications
+          </button>
+
+          {notificationMessage && (
+            <small>
+              {notificationMessage}
+            </small>
+          )}
         </div>
       </aside>
 
@@ -320,113 +328,122 @@ function ListsPage() {
           </section>
         ) : (
           <section className="lists-grid">
-            {lists.map((list, index) => (
-              <article
-                className={`dashboard-list-card ${getListColourClass(
-                  index
-                )}`}
-                key={list._id}
-              >
-                {editingListId === list._id ? (
-                  <div className="list-edit-panel">
-                    <input
-                      value={editingName}
-                      onChange={(e) =>
-                        setEditingName(e.target.value)
-                      }
-                    />
+            {lists.map((list, index) => {
+              const userOwnsList =
+                list.owner?._id === currentUser?.id ||
+                list.owner === currentUser?.id;
 
-                    <div className="card-actions">
-                      <button
-                        className="small-button primary-small"
-                        onClick={() =>
-                          saveListName(list._id)
+              return (
+                <article
+                  className={`dashboard-list-card ${getListColourClass(
+                    index
+                  )}`}
+                  key={list._id}
+                >
+                  {editingListId === list._id &&
+                  userOwnsList ? (
+                    <div className="list-edit-panel">
+                      <input
+                        value={editingName}
+                        onChange={(e) =>
+                          setEditingName(e.target.value)
                         }
-                      >
-                        Save
-                      </button>
-
-                      <button
-                        className="small-button"
-                        onClick={() => {
-                          setEditingListId(null);
-                          setEditingName("");
-                        }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <Link
-                      to={`/list/${list._id}`}
-                      className="dashboard-card-link"
-                    >
-                      <div className="list-card-icon">
-                        {list.name
-                          .charAt(0)
-                          .toUpperCase()}
-                      </div>
-
-                      <div>
-                        <h2>{list.name}</h2>
-
-                        <p>
-                          {list.members?.length > 0
-                            ? `Shared with ${list.members.length} ${
-                                list.members.length === 1
-                                  ? "person"
-                                  : "people"
-                              }`
-                            : "Private list"}
-                        </p>
-                      </div>
-                    </Link>
-
-                    <div className="dashboard-card-footer">
-                      <div className="member-avatars">
-                        {list.members
-                          ?.slice(0, 3)
-                          .map((member) => (
-                            <div
-                              className="mini-avatar"
-                              key={member._id}
-                              title={member.name}
-                            >
-                              {member.name
-                                ?.charAt(0)
-                                .toUpperCase()}
-                            </div>
-                          ))}
-                      </div>
+                      />
 
                       <div className="card-actions">
                         <button
-                          className="icon-button"
-                          title="Rename list"
+                          className="small-button primary-small"
                           onClick={() =>
-                            startEditing(list)
+                            saveListName(list._id)
                           }
                         >
-                          ✎
+                          Save
                         </button>
 
                         <button
-                          className="icon-button danger-icon"
-                          title="Delete list"
-                          onClick={() =>
-                            deleteList(list._id)
-                          }
+                          className="small-button"
+                          onClick={() => {
+                            setEditingListId(null);
+                            setEditingName("");
+                          }}
                         >
-                          ×
+                          Cancel
                         </button>
                       </div>
                     </div>
-                  </>
-                )}
-              </article>
-            ))}
+                  ) : (
+                    <>
+                      <Link
+                        to={`/list/${list._id}`}
+                        className="dashboard-card-link"
+                      >
+                        <div className="list-card-icon">
+                          {list.name
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+
+                        <div>
+                          <h2>{list.name}</h2>
+
+                          <p>
+                            {list.members?.length > 0
+                              ? `Shared with ${list.members.length} ${
+                                  list.members.length === 1
+                                    ? "person"
+                                    : "people"
+                                }`
+                              : "Private list"}
+                          </p>
+                        </div>
+                      </Link>
+
+                      <div className="dashboard-card-footer">
+                        <div className="member-avatars">
+                          {list.members
+                            ?.slice(0, 3)
+                            .map((member) => (
+                              <div
+                                className="mini-avatar"
+                                key={member._id}
+                                title={member.name}
+                              >
+                                {member.name
+                                  ?.charAt(0)
+                                  .toUpperCase()}
+                              </div>
+                            ))}
+                        </div>
+
+                        {userOwnsList && (
+                          <div className="card-actions">
+                            <button
+                              className="icon-button"
+                              title="Rename list"
+                              onClick={() =>
+                                startEditing(list)
+                              }
+                            >
+                              ✎
+                            </button>
+
+                            <button
+                              className="icon-button danger-icon"
+                              title="Delete list"
+                              onClick={() =>
+                                deleteList(list._id)
+                              }
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </article>
+              );
+            })}
 
             <button
               className="create-list-card"

@@ -9,6 +9,9 @@ import {
 import firebaseApp from "./firebase";
 import { apiFetch } from "./api";
 
+const FID_STORAGE_KEY =
+  "oddsnsodsNotificationFid";
+
 let registrationListenerAdded = false;
 let foregroundListenerAdded = false;
 let registrationInProgress = null;
@@ -28,14 +31,29 @@ const addRegistrationListener = (
     messaging,
     async (fid) => {
       try {
+        const previousFid =
+          localStorage.getItem(
+            FID_STORAGE_KEY
+          );
+
         await apiFetch(
           "/notifications/register",
           {
             method: "POST",
             body: JSON.stringify({
               fid,
+              previousFid:
+                previousFid &&
+                previousFid !== fid
+                  ? previousFid
+                  : null,
             }),
           }
+        );
+
+        localStorage.setItem(
+          FID_STORAGE_KEY,
+          fid
         );
 
         console.log(
@@ -79,13 +97,6 @@ const addForegroundListener = (
       const body =
         payload.notification?.body ||
         "You have a new notification.";
-
-      /*
-        Send the message into React.
-
-        App.jsx listens for this custom
-        browser event and shows the toast.
-      */
 
       window.dispatchEvent(
         new CustomEvent(
@@ -244,5 +255,53 @@ export const syncNotificationsIfAllowed =
         "Notification sync failed:",
         error
       );
+    }
+  };
+
+// ------------------------------------
+// REMOVE THIS BROWSER FROM USER
+// ------------------------------------
+
+export const unregisterNotifications =
+  async () => {
+    const fid =
+      localStorage.getItem(
+        FID_STORAGE_KEY
+      );
+
+    if (!fid) {
+      return {
+        success: true,
+      };
+    }
+
+    try {
+      await apiFetch(
+        "/notifications/unregister",
+        {
+          method: "DELETE",
+          body: JSON.stringify({
+            fid,
+          }),
+        }
+      );
+
+      localStorage.removeItem(
+        FID_STORAGE_KEY
+      );
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.error(
+        "Notification unregister failed:",
+        error
+      );
+
+      return {
+        success: false,
+        message: error.message,
+      };
     }
   };
