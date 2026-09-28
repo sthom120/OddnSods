@@ -9,6 +9,11 @@ const itemRoutes = require("./routes/itemRoutes");
 const notificationRoutes = require(
   "./routes/notificationRoutes"
 );
+const {
+  startDueDateNotificationScheduler,
+} = require(
+  "./services/dueDateNotificationScheduler"
+);
 
 const app = express();
 
@@ -64,6 +69,8 @@ const startServer = async () => {
     console.log(
       `Server running on port ${PORT}`
     );
+
+    startDueDateNotificationScheduler();
   });
 };
 
