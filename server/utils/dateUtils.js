@@ -22,7 +22,7 @@ const getDateKeyFromValue = (value) => {
   return date.toISOString().slice(0, 10);
 };
 
-const getTodayDateKey = (
+const getZonedDateParts = (
   now = new Date(),
   timeZone =
     process.env.APP_TIME_ZONE ||
@@ -36,15 +36,22 @@ const getTodayDateKey = (
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
       }
     ).formatToParts(now);
 
     const values = Object.fromEntries(
       parts
         .filter((part) =>
-          ["year", "month", "day"].includes(
-            part.type
-          )
+          [
+            "year",
+            "month",
+            "day",
+            "hour",
+            "minute",
+          ].includes(part.type)
         )
         .map((part) => [
           part.type,
@@ -52,14 +59,35 @@ const getTodayDateKey = (
         ])
     );
 
-    return `${values.year}-${values.month}-${values.day}`;
+    return {
+      dateKey:
+        `${values.year}-${values.month}-${values.day}`,
+      hour: Number(values.hour),
+      minute: Number(values.minute),
+    };
   } catch (error) {
     console.warn(
       `Invalid APP_TIME_ZONE, falling back to UTC: ${timeZone}`
     );
 
-    return now.toISOString().slice(0, 10);
+    return {
+      dateKey: now.toISOString().slice(0, 10),
+      hour: now.getUTCHours(),
+      minute: now.getUTCMinutes(),
+    };
   }
+};
+
+const getTodayDateKey = (
+  now = new Date(),
+  timeZone =
+    process.env.APP_TIME_ZONE ||
+    "Australia/Brisbane"
+) => {
+  return getZonedDateParts(
+    now,
+    timeZone
+  ).dateKey;
 };
 
 const addRecurrenceToDateKey = (
@@ -151,4 +179,5 @@ module.exports = {
   dateKeyToDate,
   getDateKeyFromValue,
   getTodayDateKey,
+  getZonedDateParts,
 };
