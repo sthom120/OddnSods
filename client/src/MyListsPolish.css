@@ -1,0 +1,301 @@
+/* ========================================
+   MY LISTS — SECOND PASS POLISH
+   Warmer cards, cleaner sharing info,
+   matching nav icons and tighter mobile chrome
+======================================== */
+
+.polished-nav-icon,
+.polished-mobile-nav-icon {
+  color: currentColor;
+}
+
+.polished-nav-icon svg,
+.polished-mobile-nav-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.polished-nav-icon {
+  width: 21px !important;
+  height: 21px;
+}
+
+.polished-mobile-nav-icon {
+  width: 23px;
+  height: 23px;
+}
+
+.concept-one-dashboard {
+  background:
+    radial-gradient(circle at 88% 7%, rgba(116, 94, 237, 0.09), transparent 26%),
+    radial-gradient(circle at 13% 93%, rgba(115, 184, 224, 0.07), transparent 28%),
+    linear-gradient(180deg, #fbf9ff 0%, #f8f7fc 52%, #faf9fd 100%);
+}
+
+.polished-list-card {
+  min-height: 112px;
+  overflow: visible;
+  border-color: rgba(111, 99, 165, 0.1);
+  box-shadow: 0 8px 28px rgba(44, 43, 70, 0.055);
+}
+
+.list-card-purple.polished-list-card {
+  background: linear-gradient(145deg, #f7f4ff 0%, #fdfcff 62%, #ffffff 100%) !important;
+}
+
+.list-card-blue.polished-list-card {
+  background: linear-gradient(145deg, #f1f9ff 0%, #fbfdff 62%, #ffffff 100%) !important;
+}
+
+.list-card-peach.polished-list-card {
+  background: linear-gradient(145deg, #fff7f1 0%, #fffdfb 62%, #ffffff 100%) !important;
+}
+
+.list-card-green.polished-list-card {
+  background: linear-gradient(145deg, #f1faf6 0%, #fbfefc 62%, #ffffff 100%) !important;
+}
+
+.list-card-pink.polished-list-card {
+  background: linear-gradient(145deg, #fff5f9 0%, #fffdfd 62%, #ffffff 100%) !important;
+}
+
+.polished-list-card-row {
+  min-height: 74px;
+  align-items: center;
+}
+
+.polished-card-link {
+  min-height: 74px;
+  padding: 5px 2px;
+  border-radius: 16px;
+}
+
+.polished-card-link:focus-visible {
+  outline: 3px solid rgba(102, 87, 232, 0.2);
+  outline-offset: 3px;
+}
+
+.polished-status-row {
+  min-height: 28px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.polished-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #6e7280;
+  background: rgba(239, 238, 244, 0.88);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.polished-status-pill.shared {
+  color: #5e50cb;
+  background: rgba(234, 230, 255, 0.9);
+}
+
+.inline-member-avatars {
+  display: flex;
+  align-items: center;
+  padding-left: 2px;
+}
+
+.inline-member-avatars .mini-avatar {
+  width: 26px;
+  height: 26px;
+  margin-right: -7px;
+  border: 2px solid rgba(255, 255, 255, 0.96);
+  font-size: 0.61rem;
+  box-shadow: 0 2px 7px rgba(46, 44, 75, 0.07);
+}
+
+.inline-member-avatars .mini-avatar:nth-child(2) {
+  background: #6da6b0;
+}
+
+.inline-member-avatars .mini-avatar:nth-child(3) {
+  background: #e59a77;
+}
+
+.polished-list-card .list-card-menu-button {
+  color: #858796;
+}
+
+.polished-list-card .list-card-menu-button:hover,
+.polished-list-card .list-card-menu-button[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 760px) {
+  body {
+    background: #fbf9ff;
+  }
+
+  .concept-one-dashboard {
+    padding-bottom: 80px;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(112, 90, 231, 0.08), transparent 28%),
+      linear-gradient(180deg, #fbf9ff 0%, #f9f8fc 100%);
+  }
+
+  .concept-one-sidebar {
+    height: 64px;
+    padding: 9px 18px;
+  }
+
+  .concept-one-sidebar .brand {
+    gap: 9px;
+    font-size: 1rem;
+  }
+
+  .concept-one-sidebar .brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+  }
+
+  .mobile-profile-trigger {
+    width: 36px;
+    height: 36px;
+    font-size: 0.82rem;
+  }
+
+  .concept-one-main {
+    padding: 22px 18px 24px;
+  }
+
+  .concept-one-header {
+    margin-bottom: 20px;
+  }
+
+  .concept-one-header h1 {
+    font-size: 2.08rem;
+  }
+
+  .concept-one-header .dashboard-subtitle {
+    max-width: 330px;
+    margin-top: 7px;
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+
+  .new-list-button {
+    min-height: 52px;
+    margin-top: 18px;
+    border-radius: 16px;
+  }
+
+  .concept-one-lists-grid {
+    gap: 11px;
+  }
+
+  .polished-list-card {
+    min-height: 96px;
+    padding: 13px 14px;
+    border-radius: 19px;
+    box-shadow: 0 6px 20px rgba(42, 42, 66, 0.045);
+  }
+
+  .polished-list-card-row,
+  .polished-card-link {
+    min-height: 68px;
+  }
+
+  .polished-card-link {
+    gap: 12px;
+  }
+
+  .polished-card-link .list-card-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+
+  .polished-card-link h2 {
+    margin-bottom: 7px;
+    font-size: 0.98rem;
+  }
+
+  .polished-status-row {
+    gap: 8px;
+  }
+
+  .polished-status-pill {
+    min-height: 25px;
+    padding: 5px 8px;
+    font-size: 0.66rem;
+  }
+
+  .inline-member-avatars .mini-avatar {
+    width: 25px;
+    height: 25px;
+  }
+
+  .list-card-menu-button {
+    width: 42px;
+    height: 42px;
+  }
+
+  .mobile-bottom-nav {
+    height: calc(68px + env(safe-area-inset-bottom));
+    padding-top: 6px;
+  }
+
+  .mobile-bottom-nav-item {
+    gap: 3px;
+    font-size: 0.63rem;
+  }
+
+  .mobile-nav-avatar {
+    width: 23px;
+    height: 23px;
+  }
+
+  .mobile-account-panel {
+    bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 400px) {
+  .concept-one-main {
+    padding-inline: 14px;
+  }
+
+  .concept-one-sidebar {
+    padding-inline: 14px;
+  }
+
+  .polished-list-card {
+    padding-inline: 12px;
+  }
+
+  .polished-card-link {
+    gap: 10px;
+  }
+
+  .polished-card-link .list-card-icon {
+    width: 43px;
+    height: 43px;
+  }
+
+  .polished-status-pill {
+    white-space: normal;
+    line-height: 1.15;
+  }
+
+  .inline-member-avatars {
+    margin-top: 1px;
+  }
+}

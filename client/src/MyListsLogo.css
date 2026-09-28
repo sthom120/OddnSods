@@ -1,0 +1,28 @@
+/* My Lists brand logo override */
+
+.concept-one-sidebar .brand {
+  width: 205px;
+  height: 60px;
+  margin-bottom: 30px;
+  background: url("/oddsnsods-logo.png") left center / contain no-repeat;
+}
+
+.concept-one-sidebar .brand-mark,
+.concept-one-sidebar .brand > span {
+  visibility: hidden;
+}
+
+@media (max-width: 760px) {
+  .concept-one-sidebar .brand {
+    width: 172px;
+    height: 48px;
+    margin: 0;
+    background-size: contain;
+  }
+}
+
+@media (max-width: 380px) {
+  .concept-one-sidebar .brand {
+    width: 162px;
+  }
+}
